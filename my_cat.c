@@ -95,10 +95,10 @@ void print_file(FILE *fp, Options * flags, int * line_number) {
     }
     if (line_start){
       if (flags->number_lines) {
-        printf("     %d\t", (*line_number)++);
+        printf("%6d\t", (*line_number)++);
         line_start = false;
       } else if (flags->number_nonblank_lines && c != '\n') {
-        printf("     %d\t",(*line_number)++);
+        printf("%6d\t",(*line_number)++);
         line_start = false;
       }
     }
@@ -183,6 +183,8 @@ int parse_flags(char *argv[], int size, Options *flags) {
             break;
           case 'v':
             flags->show_nonprinting = true;
+            break;
+          case 'u':
             break;
           default:
             fprintf(stderr, "my_cat: invalid option -- '%c'\n", argv[i][1]);
