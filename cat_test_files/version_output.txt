@@ -1,5 +1,0 @@
-./my_cat (clone of GNU coreutils) 9.4
-No claim of any copyright or license
-There is NO WARRANTY, to the extent permitted by law.
-
-Written by Abrasive Squid
