@@ -12,7 +12,7 @@ how these programs interface with the OS.
 ## coreutils
 
 | program | description | status | 
-| [`my_cat`](.my_cat) | concatenate files to stdout | completed |
+| [`my_cat`](my_cat) | concatenate files to stdout | completed |
 | `my_ls` | list information about files | in progress |
 | `my_grep` | search for patterns in files | planned |
 
