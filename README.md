@@ -12,8 +12,8 @@ how these programs interface with the OS.
 ## coreutils
 
 | program | description | status |   
-| [`my_cat`](my_cat) | concatenate files to stdout | **completed** |  
-| [`my_ls`](my_ls) | list information about files | **in progress** |
-| [`my_grep`](my_grep) | search for patterns in files | ***planned* |
+| [`my_cat`](my_cat) | concatenate files to stdout | **completed** | <br> 
+| [`my_ls`](my_ls) | list information about files | **in progress** |<br>
+| [`my_grep`](my_grep) | search for patterns in files | ***planned* | <br>
 
 
