@@ -1,0 +1,11 @@
+./my_cat -ns file.txt (Combined flags)
+
+./my_cat file_without_newline.txt (EOF edge case)
+
+./my_cat empty.txt (Empty file)
+
+./my_cat - (Read stdin)
+
+./my_cat -n -b file.txt (Flag override)
+
+./my_cat -E file_without_newline.txt (Show ends on no newline)
