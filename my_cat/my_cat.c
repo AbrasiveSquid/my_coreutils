@@ -24,15 +24,8 @@ int main(int argc, char *argv[]) {
   int exit_status = 0;
   int line_number = 1;
   int flag_set = 0;
-  Options flags;
+  Options flags = {0}; // init all flags to false
   
-  // initialize flags to false
-  flags.number_lines = false;
-  flags.number_nonblank_lines = false;
-  flags.show_ends = false;
-  flags.squeeze_blank = false;
-  flags.show_tabs = false;
-  flags.show_nonprinting = false;
 
   flag_set = parse_flags(argv, argc, &flags);
   
