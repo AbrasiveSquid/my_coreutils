@@ -2,7 +2,8 @@
 CC = gcc
 CFLAGS = -g -Wall -Wextra -std=c99 -fsanitize=address,undefined
 TARGETS = my_cat 
-OBJECTS = my_cat.o
+OBJECTS = my_cat.o my_cat_helper.o
+HEADERS = my_cat_helper.h
 UNAME_S = $(shell uname -s)
 COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version
 LINUX_TESTS = cat_show_ends cat_all_flags cat_show_all cat_show_tabs 
@@ -18,7 +19,10 @@ all: $(TARGETS)
 my_cat: $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-my_cat.o: my_cat.c
+my_cat.o: my_cat.c $(HEADERS)
+	$(CC) $(CFLAGS) $< -c
+
+my_cat_helper.o: my_cat_helper.c $(HEADERS) 
 	$(CC) $(CFLAGS) $< -c
 
 .PHONY: clean cat_leak $(CAT_TEST_TARGETS)

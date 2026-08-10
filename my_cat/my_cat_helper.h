@@ -3,9 +3,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // struct that contains all the possible flags and members for arg parsing
-typedef struct {
+typedef struct
+{
   bool number_lines;          // flag -n
   bool number_nonblank_lines; // flag -b or --number-nonblank
   bool show_ends; // flag -E, also included with -A or --show-all or --show-ends
@@ -19,7 +21,8 @@ typedef struct {
 } Options;
 
 // struct that contains an array of files to print, and holds number in array
-typedef struct {
+typedef struct
+{
   char **files;
   size_t file_count;
 } File_List;
