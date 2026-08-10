@@ -7,7 +7,7 @@ HEADERS = my_cat_helper.h
 UNAME_S = $(shell uname -s)
 COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version
 LINUX_TESTS = cat_show_ends cat_all_flags cat_show_all cat_show_tabs 
-ifeq ($(UNAME)S,LINUX)
+ifeq ($(UNAME_S),LINUX)
 	CAT_TEST_TARGETS = $(COMMON_TESTS) $(LINUX_TESTS)
 else
 	CAT_TEST_TARGETS = $(COMMON_TESTS)
