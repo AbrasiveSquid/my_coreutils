@@ -35,14 +35,11 @@ typedef struct
       name of the file or stdin to print
     flag: Options *
       struct that contains the options to modify the print to stdout
-    line_number: int *
-      pointer to an int that tracks the current line number, needed for some
-   flags
 
     Postcondition:
       displays the char from fp to stdout
 */
-void print_file(FILE *fp, Options *flag, int *line_number);
+void print_file(FILE *fp, Options *flag);
 
 /*
    frees up allocated memory for file

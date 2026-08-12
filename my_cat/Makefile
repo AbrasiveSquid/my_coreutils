@@ -5,7 +5,7 @@ TARGETS = my_cat
 OBJECTS = my_cat.o my_cat_helper.o
 HEADERS = my_cat_helper.h
 UNAME_S = $(shell uname -s)
-COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version
+COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version cat_multiple_stdin cat_multiple_files cat_invalid_flag cat_test_long_options
 LINUX_TESTS = cat_show_ends cat_all_flags cat_show_all cat_show_tabs 
 ifeq ($(UNAME_S),LINUX)
 	CAT_TEST_TARGETS = $(COMMON_TESTS) $(LINUX_TESTS)
@@ -65,6 +65,12 @@ cat_number_and_blank: my_cat
 	diff my_out sys_out
 	rm -f my_out sys_out
 	./my_cat -b -n ./cat_test_files/line_num.txt > my_outa
+	./my_cat -n -b ./cat_test_files/line_num.txt > my_outb
+	diff my_outa my_outb 
+	./my_cat --number-nonblank --number ./cat_test_files/line_num.txt > my_outa
+	./my_cat -b -n ./cat_test_files/line_num.txt > my_outb
+	diff my_outa my_outb 
+	./my_cat --number --number-nonblank ./cat_test_files/line_num.txt > my_outa
 	./my_cat -n -b ./cat_test_files/line_num.txt > my_outb
 	diff my_outa my_outb 
 	rm -f my_outa my_outb
@@ -239,4 +245,66 @@ cat_all_flags: my_cat
 	cat -AbeEnstTuv ./cat_test_files/line_num.txt > sys_out
 	diff my_out sys_out
 	rm -rf my_out sys_out
+
+cat_multiple_stdin: my_cat
+	./my_cat - - < ./cat_test_files/help_output.txt < ./cat_test_files/version_output.txt > my_out
+	cat - - < ./cat_test_files/help_output.txt < ./cat_test_files/version_output.txt > sys_out
+	diff my_out sys_out
+	rm -rf my_out sys_out
+
+cat_multiple_files: my_cat
+	./my_cat ./cat_test_files/help_output.txt ./cat_test_files/line_num.txt ./cat_test_files/version_output.txt > my_out
+	cat ./cat_test_files/help_output.txt ./cat_test_files/line_num.txt ./cat_test_files/version_output.txt > sys_out
+	diff my_out sys_out
+	rm -rf my_out sys_out
+
+cat_invalid_flag: my_cat
+	# need to expect error code 1
+	./my_cat -j 2> my_out; test $$? -eq 1 
+	diff my_out ./cat_test_files/invalid_flag_out.txt
+	./my_cat --jumble 2> my_out; test $$? -eq 1 
+	diff my_out ./cat_test_files/invalid_option_out.txt
+	rm -rf my_out
+
+cat_test_long_options: my_cat
+	./my_cat --show-all ./cat_test_files/help_output.txt > my_out
+	./my_cat -A ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	./my_cat --number-nonblank ./cat_test_files/help_output.txt > my_out
+	./my_cat -b ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	./my_cat --show-ends ./cat_test_files/help_output.txt > my_out
+	./my_cat -E ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	./my_cat --number cat_test_files/help_output.txt > my_out
+	./my_cat -n ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	./my_cat --show-tabs cat_test_files/help_output.txt > my_out
+	./my_cat -T ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	./my_cat --show-nonprinting cat_test_files/help_output.txt > my_out
+	./my_cat -v ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	./my_cat --squeeze-blank cat_test_files/help_output.txt > my_out
+	./my_cat -s ./cat_test_files/help_output.txt > my_out2
+	diff my_out my_out2
+	rm -rf my_out my_out2
+
+cat_no_input: my_cat
+	./my_cat < ./cat_test_files/help_output.txt > my_out
+	cat < ./cat_test_files/help_output.txt > sys_out
+	diff my_out sys_out
+	./my_cat -ve < ./cat_test_files/help_output.txt > my_out
+	cat -ve < ./cat_test_files/help_output.txt > sys_out
+	diff my_out sys_out
+	rm -rf my_out sys_out
+
+cat_interspersed_flags: my_cat
+	./my_cat ./cat_test_files/help_output.txt -n ./cat_test_files/version_output.txt -e > my_out
+	cat -ne ./cat_test_files/help_output.txt ./cat_test_files/version_output.txt > sys_out
+	diff my_out sys_out
+	rm -rf my_out sys_out
+
+
+
 

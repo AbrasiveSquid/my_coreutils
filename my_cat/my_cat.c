@@ -5,7 +5,6 @@
 
 int main(int argc, char *argv[])
 {
-  int line_number = 1;
   Options flags = {0}; // init all flags to false
   File_List file_list = {NULL,
                          0}; // init files array to NULL and file_count to 0
@@ -35,7 +34,7 @@ int main(int argc, char *argv[])
   // if no arguments or if only flags as arguments
   if (!(file_list.files))
   {
-    print_file(stdin, &flags, &line_number);
+    print_file(stdin, &flags);
     cleanup(&(file_list.files));
     return 0;
   }
@@ -46,20 +45,24 @@ int main(int argc, char *argv[])
   {
     // if argument is "-" takes input from stdin until EOF (ctrl+D) then
     // continues  to next argument
-    if (strcmp("-", *(file_list.files)) == 0)
+    if (strcmp("-", *(file_list.files + i)) == 0)
     {
-      print_file(stdin, &flags, &line_number);
+      if (feof(stdin))
+      {
+        clearerr(stdin); // removes EOF on stdin if there was a prev stdin
+      }
+      print_file(stdin, &flags);
     }
     else
     {
-      fp = open_file(*(file_list.files));
+      fp = open_file(*(file_list.files + i));
       if (fp == NULL)
       {
         fprintf(stderr, "%s: %s: No such file or directory", argv[0],
                 *(file_list.files));
         continue;
       }
-      print_file(fp, &flags, &line_number);
+      print_file(fp, &flags);
       fclose(fp);
     }
   }

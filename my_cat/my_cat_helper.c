@@ -1,7 +1,7 @@
 #include "my_cat_helper.h"
 
 // displays the contents of fp to stdout
-void print_file(FILE *fp, Options *flags, int *line_number)
+void print_file(FILE *fp, Options *flags)
 {
   if (fp == NULL)
   {
@@ -10,6 +10,7 @@ void print_file(FILE *fp, Options *flags, int *line_number)
 
   int c;
   int newline_count = 0;
+  int line_number = 1;
   bool line_start = true;
   while ((c = fgetc(fp)) != EOF)
   {
@@ -41,12 +42,12 @@ void print_file(FILE *fp, Options *flags, int *line_number)
     {
       if (flags->number_lines)
       {
-        printf("%6d\t", (*line_number)++);
+        printf("%6d\t", line_number++);
         line_start = false;
       }
       else if (flags->number_nonblank_lines && c != '\n')
       {
-        printf("%6d\t", (*line_number)++);
+        printf("%6d\t", line_number++);
         line_start = false;
       }
     }
@@ -112,17 +113,18 @@ void parse_flags(char *flag, Options *flags)
     {
       flags->show_help = true;
       flags->exit_early = true;
-      return; // exit early
     }
     else if (strcmp(flag, "--version") == 0)
     {
       flags->show_version = true;
       flags->exit_early = true;
-      // exit early
-      return;
     }
     else if (strcmp(flag, "--number") == 0)
     {
+      if (flags->number_nonblank_lines)
+      {
+        return; // this cancels out -n flag
+      }
       flags->number_lines = true;
     }
     else if (strcmp(flag, "--show-all") == 0)
@@ -134,6 +136,7 @@ void parse_flags(char *flag, Options *flags)
     else if (strcmp(flag, "--number-nonblank") == 0)
     {
       flags->number_nonblank_lines = true;
+      flags->number_lines = false; // if -b set it overrides -n
     }
     else if (strcmp(flag, "--show-ends") == 0)
     {
@@ -157,8 +160,8 @@ void parse_flags(char *flag, Options *flags)
       fprintf(stderr, "Try my_cat --help for more information.\n");
       flags->invalid_flag = true;
       flags->exit_early = true;
-      return;
     }
+    return; // always return early after setting a long option flag
   }
 
   int i = 1;
@@ -167,6 +170,10 @@ void parse_flags(char *flag, Options *flags)
     switch (flag[i])
     {
     case 'n':
+      if (flags->number_lines)
+      {
+        return; // -b flag overrides -n
+      }
       flags->number_lines = true;
       break;
     case 'A':
@@ -176,6 +183,7 @@ void parse_flags(char *flag, Options *flags)
       break;
     case 'b':
       flags->number_nonblank_lines = true;
+      flags->number_lines = false; // -b flag overrides -n
       break;
     case 'e':
       flags->show_ends = true;
@@ -219,7 +227,7 @@ void parse_files(char *file_name, File_List *file_list)
   if (!(file_list->files))
   {
     // allocate room for one pointer
-    file_list->files = malloc(sizeof(file_list->files));
+    file_list->files = malloc(sizeof(*file_list->files));
     if (!(file_list->files))
     {
       perror(file_name);
@@ -231,8 +239,8 @@ void parse_files(char *file_name, File_List *file_list)
     // realloc for another pointer
     char **file_list_temp =
         realloc(file_list->files,
-                (file_list->file_count + 1) * sizeof(file_list->files));
-    if (*file_list_temp)
+                (file_list->file_count + 1) * sizeof(*file_list->files));
+    if (!file_list_temp)
     {
       perror(file_name);
       cleanup(&(file_list->files));

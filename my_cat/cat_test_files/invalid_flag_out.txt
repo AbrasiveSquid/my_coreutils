@@ -1,0 +1,2 @@
+my_cat: invalid option -- 'j'
+Try my_cat --help for more information.
