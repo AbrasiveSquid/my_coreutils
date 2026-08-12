@@ -91,6 +91,7 @@ FILE *open_file(char *filepath)
   FILE *fp = fopen(filepath, "r");
   if (fp == NULL)
   {
+    fflush(stdout);
     perror(filepath);
     return NULL;
   }

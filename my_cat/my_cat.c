@@ -5,6 +5,7 @@
 
 int main(int argc, char *argv[])
 {
+  int exit_status = 0;
   Options flags = {0}; // init all flags to false
   File_List file_list = {NULL,
                          0}; // init files array to NULL and file_count to 0
@@ -18,16 +19,17 @@ int main(int argc, char *argv[])
     if (flags.show_help)
     {
       print_help(argv[0]);
-      return 0;
+      return exit_status;
     }
     else if (flags.show_version)
     {
       print_version(argv[0]);
-      return 0;
+      return exit_status;
     }
     else if (flags.invalid_flag)
     {
-      return 1;
+      exit_status = 1;
+      return exit_status;
     }
   }
 
@@ -36,7 +38,7 @@ int main(int argc, char *argv[])
   {
     print_file(stdin, &flags);
     cleanup(&(file_list.files));
-    return 0;
+    return exit_status;
   }
 
   // opens each file path and displays them one after another
@@ -58,8 +60,7 @@ int main(int argc, char *argv[])
       fp = open_file(*(file_list.files + i));
       if (fp == NULL)
       {
-        fprintf(stderr, "%s: %s: No such file or directory", argv[0],
-                *(file_list.files));
+        exit_status = 1; // set to 1 if a file is missing
         continue;
       }
       print_file(fp, &flags);
@@ -68,5 +69,5 @@ int main(int argc, char *argv[])
   }
 
   cleanup(&(file_list.files));
-  return 0;
+  return exit_status;
 }
