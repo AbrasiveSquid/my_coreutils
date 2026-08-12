@@ -5,7 +5,7 @@ TARGETS = my_cat
 OBJECTS = my_cat.o my_cat_helper.o
 HEADERS = my_cat_helper.h
 UNAME_S = $(shell uname -s)
-COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version cat_multiple_stdin cat_multiple_files cat_invalid_flag cat_test_long_options
+COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version cat_multiple_stdin cat_multiple_files cat_invalid_flag cat_test_long_options cat_no_input cat_interspersed_flags cat_no_file_with_flag
 LINUX_TESTS = cat_show_ends cat_all_flags cat_show_all cat_show_tabs 
 ifeq ($(UNAME_S),LINUX)
 	CAT_TEST_TARGETS = $(COMMON_TESTS) $(LINUX_TESTS)
@@ -305,6 +305,14 @@ cat_interspersed_flags: my_cat
 	diff my_out sys_out
 	rm -rf my_out sys_out
 
+cat_no_file_with_flag: my_cat
+	./my_cat -n < ./cat_test_files/line_num.txt > my_out
+	cat -n < ./cat_test_files/line_num.txt > sys_out
+	diff my_out sys_out
+	./my_cat --show-tabs --show-nonprinting < ./cat_test_files/line_num.txt > my_out
+	cat -t < ./cat_test_files/line_num.txt > sys_out
+	diff my_out sys_out
+	rm -rf my_out sys_out
 
 
 
