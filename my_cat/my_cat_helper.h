@@ -137,6 +137,21 @@ void parse_files(char *file_name, File_List *file_list);
 void parse_arguments(int size, char **argv, File_List *files, Options *flags);
 
 /*
+   Checks if any flags are active and sets the active_flag if any other parsing
+  flag active
+
+  Parameters:
+    flags: Options *
+      a struct wth booleans that represent options for printing
+
+
+  Postcondition:
+    if any of the flags are set that affects the prinout of files, active_flag
+    is set in the Options flag struct
+*/
+void set_active_flags(Options *flags);
+
+/*
   Prints to stdout the usage of the program and the various flags that can be
   given when the program is called
 

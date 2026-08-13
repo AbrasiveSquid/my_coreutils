@@ -32,6 +32,9 @@ int main(int argc, char *argv[])
     }
   }
 
+  // sets active flag if any parsing options set
+  set_active_flags(&flags);
+
   // if no arguments or if only flags as arguments
   if (!(file_list.files))
   {

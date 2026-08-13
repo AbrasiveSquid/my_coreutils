@@ -156,40 +156,33 @@ void parse_flags(char *flag, Options *flags)
         return; // this cancels out -n flag
       }
       flags->number_lines = true;
-      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-all") == 0)
     {
       flags->show_ends = true;
       flags->show_tabs = true;
       flags->show_nonprinting = true;
-      flags->active_flags = true;
     }
     else if (strcmp(flag, "--number-nonblank") == 0)
     {
       flags->number_nonblank_lines = true;
       flags->number_lines = false; // if -b set it overrides -n
-      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-ends") == 0)
     {
       flags->show_ends = true;
-      flags->active_flags = true;
     }
     else if (strcmp(flag, "--squeeze-blank") == 0)
     {
       flags->squeeze_blank = true;
-      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-tabs") == 0)
     {
       flags->show_tabs = true;
-      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-nonprinting") == 0)
     {
       flags->show_nonprinting = true;
-      flags->active_flags = true;
     }
     else if (flag[1] == '-')
     {
@@ -212,44 +205,35 @@ void parse_flags(char *flag, Options *flags)
         break; // -b flag overrides -n
       }
       flags->number_lines = true;
-      flags->active_flags = true;
       break;
     case 'A':
       flags->show_ends = true;
       flags->show_tabs = true;
       flags->show_nonprinting = true;
-      flags->active_flags = true;
       break;
     case 'b':
       flags->number_nonblank_lines = true;
       flags->number_lines = false; // -b flag overrides -n
-      flags->active_flags = true;
       break;
     case 'e':
       flags->show_ends = true;
       flags->show_nonprinting = true;
-      flags->active_flags = true;
       break;
     case 'E':
       flags->show_ends = true;
-      flags->active_flags = true;
       break;
     case 's':
       flags->squeeze_blank = true;
-      flags->active_flags = true;
       break;
     case 't':
       flags->show_nonprinting = true;
       flags->show_tabs = true;
-      flags->active_flags = true;
       break;
     case 'T':
       flags->show_tabs = true;
-      flags->active_flags = true;
       break;
     case 'v':
       flags->show_nonprinting = true;
-      flags->active_flags = true;
       break;
     case 'u':
       break;
@@ -261,11 +245,6 @@ void parse_flags(char *flag, Options *flags)
     }
     i++;
   }
-  // // -b flag overrides -n
-  // if (flags->number_nonblank_lines)
-  // {
-  //   flags->number_lines = false;
-  // }
 }
 
 void parse_files(char *file_name, File_List *file_list)
@@ -321,6 +300,13 @@ void parse_arguments(int size, char **argv, File_List *file_list,
       parse_files(argv[i], file_list);
     }
   }
+}
+
+void set_active_flags(Options *flags)
+{
+  flags->active_flags = flags->number_lines || flags->number_nonblank_lines ||
+                        flags->show_ends || flags->squeeze_blank ||
+                        flags->show_tabs || flags->show_nonprinting;
 }
 
 void print_help(char *program_name)
