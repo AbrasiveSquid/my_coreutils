@@ -8,6 +8,12 @@ void print_file(FILE *fp, Options *flags)
     return;
   }
 
+  if (!(flags->active_flags))
+  {
+    print_file_basic(fp);
+    return;
+  }
+
   int c;
   int newline_count = 0;
   int line_number = 1;
@@ -86,6 +92,20 @@ void print_file(FILE *fp, Options *flags)
   }
 }
 
+void print_file_basic(FILE *fp)
+{
+  if (fp == NULL)
+  {
+    return;
+  }
+
+  int c;
+  while ((c = fgetc(fp)) != EOF)
+  {
+    fputc(c, stdout);
+  }
+}
+
 FILE *open_file(char *filepath)
 {
   FILE *fp = fopen(filepath, "r");
@@ -136,33 +156,40 @@ void parse_flags(char *flag, Options *flags)
         return; // this cancels out -n flag
       }
       flags->number_lines = true;
+      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-all") == 0)
     {
       flags->show_ends = true;
       flags->show_tabs = true;
       flags->show_nonprinting = true;
+      flags->active_flags = true;
     }
     else if (strcmp(flag, "--number-nonblank") == 0)
     {
       flags->number_nonblank_lines = true;
       flags->number_lines = false; // if -b set it overrides -n
+      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-ends") == 0)
     {
       flags->show_ends = true;
+      flags->active_flags = true;
     }
     else if (strcmp(flag, "--squeeze-blank") == 0)
     {
       flags->squeeze_blank = true;
+      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-tabs") == 0)
     {
       flags->show_tabs = true;
+      flags->active_flags = true;
     }
     else if (strcmp(flag, "--show-nonprinting") == 0)
     {
       flags->show_nonprinting = true;
+      flags->active_flags = true;
     }
     else if (flag[1] == '-')
     {
@@ -180,40 +207,49 @@ void parse_flags(char *flag, Options *flags)
     switch (flag[i])
     {
     case 'n':
-      if (flags->number_lines)
+      if (flags->number_nonblank_lines)
       {
-        continue; // -b flag overrides -n
+        break; // -b flag overrides -n
       }
       flags->number_lines = true;
+      flags->active_flags = true;
       break;
     case 'A':
       flags->show_ends = true;
       flags->show_tabs = true;
       flags->show_nonprinting = true;
+      flags->active_flags = true;
       break;
     case 'b':
       flags->number_nonblank_lines = true;
       flags->number_lines = false; // -b flag overrides -n
+      flags->active_flags = true;
       break;
     case 'e':
       flags->show_ends = true;
       flags->show_nonprinting = true;
+      flags->active_flags = true;
       break;
     case 'E':
       flags->show_ends = true;
+      flags->active_flags = true;
       break;
     case 's':
       flags->squeeze_blank = true;
+      flags->active_flags = true;
       break;
     case 't':
       flags->show_nonprinting = true;
       flags->show_tabs = true;
+      flags->active_flags = true;
       break;
     case 'T':
       flags->show_tabs = true;
+      flags->active_flags = true;
       break;
     case 'v':
       flags->show_nonprinting = true;
+      flags->active_flags = true;
       break;
     case 'u':
       break;
@@ -225,11 +261,11 @@ void parse_flags(char *flag, Options *flags)
     }
     i++;
   }
-  // -b flag overrides -n
-  if (flags->number_nonblank_lines)
-  {
-    flags->number_lines = false;
-  }
+  // // -b flag overrides -n
+  // if (flags->number_nonblank_lines)
+  // {
+  //   flags->number_lines = false;
+  // }
 }
 
 void parse_files(char *file_name, File_List *file_list)

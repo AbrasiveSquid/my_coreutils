@@ -353,3 +353,12 @@ cat_double_dash: my_cat
 	@diff my_out sys_out
 	@rm -f -- -n my_out sys_out
 	@echo "cat_double_dash passed"
+
+cat_basic: my_cat
+	@printf 'hello\nworld\n' > n
+	@./my_cat n > my_out
+	@cat n > sys_out
+	@diff my_out sys_out
+	@rm -f n my_out sys_out
+	@echo "cat_basic passed"
+

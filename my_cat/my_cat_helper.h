@@ -45,6 +45,19 @@ typedef struct
 void print_file(FILE *fp, Options *flag);
 
 /*
+   Prints out the file name fp to stdout. Takes and prints input char by char,
+   Has no control flow for checking flags, called when no flags set
+
+   Parameters:
+    fp: FILE *
+      name of the file or stdin to print
+
+    Postcondition:
+      displays the char from fp to stdout
+*/
+void print_file_basic(FILE *fp);
+
+/*
    frees up allocated memory for file
 
    Parameters:
