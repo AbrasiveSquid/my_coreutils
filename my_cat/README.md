@@ -24,6 +24,10 @@ C, Unix, and systems programming.
 - Reading from `stdin` with `-`
 - Supports multiple `-` arguments
 - Supports combining multiple flags, for example `-ns` or `-n` `-s` are equivalent
+- Support for the`--` end of options marker
+- Fast printing path when no flags are active
+- Broad automated tests
+- Returns a nonzero status when a file can't be opened, but continues to process remaining files
 - Supports flags anywhere among the command line arguments:
   - `./my_cat file.txt -n`
   - `./my_cat -n file.txt`

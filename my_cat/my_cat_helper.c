@@ -25,6 +25,7 @@ void print_file(FILE *fp, Options *flags)
     {
       if (c == '\n')
       {
+        // count newlines as squeeze removes 2+ newlines into 1
         if (newline_count < 2)
         {
           newline_count++;
@@ -35,6 +36,12 @@ void print_file(FILE *fp, Options *flags)
           {
             continue;
           }
+
+          if (c == EOF)
+          {
+            break; // outer while loop should end if EOF
+          }
+
           ungetc(c, fp);
           continue;
         }
@@ -352,7 +359,7 @@ void cleanup(char ***files)
 {
   if (!(*files))
   {
-    return; // doesn't alocate if *files is null
+    return; // doesn't deallocate if *files is null
   }
   free(*files);
 }
