@@ -101,6 +101,10 @@ FILE *open_file(char *filepath)
 // goes through the input and sets and flag in the CL args
 void parse_flags(char *flag, Options *flags)
 {
+  if (flags->option_terminator)
+  {
+    return; // no more flags if this option is set
+  }
   if (flag[0] != '-')
   {
     fprintf(stderr, "Invalid flag %s, exiting\n", flag);
@@ -110,6 +114,11 @@ void parse_flags(char *flag, Options *flags)
 
   if (flag[1] == '-')
   {
+    if (strcmp(flag, "--") == 0)
+    {
+      flags->option_terminator = true; // stop processing flags
+      return;
+    }
     if (strcmp(flag, "--help") == 0)
     {
       flags->show_help = true;
@@ -173,7 +182,7 @@ void parse_flags(char *flag, Options *flags)
     case 'n':
       if (flags->number_lines)
       {
-        return; // -b flag overrides -n
+        continue; // -b flag overrides -n
       }
       flags->number_lines = true;
       break;
@@ -229,18 +238,19 @@ void parse_files(char *file_name, File_List *file_list)
   {
     // allocate room for one pointer
     file_list->files = malloc(sizeof(*file_list->files));
+
     if (!(file_list->files))
     {
       perror(file_name);
       exit(EXIT_FAILURE);
     }
+    file_list->capacity++;
   }
-  else
+  else if (file_list->capacity <= file_list->file_count)
   {
-    // realloc for another pointer
     char **file_list_temp =
         realloc(file_list->files,
-                (file_list->file_count + 1) * sizeof(*file_list->files));
+                (file_list->capacity * 2) * sizeof(*file_list->files));
     if (!file_list_temp)
     {
       perror(file_name);
@@ -248,6 +258,7 @@ void parse_files(char *file_name, File_List *file_list)
       exit(EXIT_FAILURE);
     }
     file_list->files = file_list_temp;
+    file_list->capacity *= 2;
   }
   // assign the ptr to file_name in file_list
   file_list->files[(file_list->file_count)++] = file_name;
@@ -258,7 +269,7 @@ void parse_arguments(int size, char **argv, File_List *file_list,
 {
   for (int i = 0; i < size; i++)
   {
-    if (argv[i][0] == '-' && argv[i][1] != '\0')
+    if (argv[i][0] == '-' && argv[i][1] != '\0' && !flags->option_terminator)
     {
       parse_flags(argv[i], flags);
 

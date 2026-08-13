@@ -11,19 +11,22 @@ typedef struct
   bool number_lines;          // flag -n
   bool number_nonblank_lines; // flag -b or --number-nonblank
   bool show_ends; // flag -E, also included with -A or --show-all or --show-ends
-  bool squeeze_blank;    // -s or --squeeze-blank
-  bool show_tabs;        // flag -T, -t, or -A or --show-all or --show-tabs
-  bool show_nonprinting; // flag -t, -A, -v, or show-all or show-nonprinting
-  bool show_help;        // flag --help
-  bool show_version;     // flag --version
-  bool invalid_flag;     // flag that isn't one of above
-  bool exit_early;       // set when either show_help, show_version, invalid_set
+  bool squeeze_blank;     // -s or --squeeze-blank
+  bool show_tabs;         // flag -T, -t, or -A or --show-all or --show-tabs
+  bool show_nonprinting;  // flag -t, -A, -v, or show-all or show-nonprinting
+  bool show_help;         // flag --help
+  bool show_version;      // flag --version
+  bool active_flags;      // used to do fast print
+  bool option_terminator; // used to stop processing flags when -- given
+  bool invalid_flag;      // flag that isn't one of above
+  bool exit_early; // set when either show_help, show_version, invalid_set
 } Options;
 
 // struct that contains an array of files to print, and holds number in array
 typedef struct
 {
   char **files;
+  size_t capacity;
   size_t file_count;
 } File_List;
 
