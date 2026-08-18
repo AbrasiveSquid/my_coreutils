@@ -5,7 +5,6 @@ int main(int argc, char *argv[])
   DIR *dp;
   struct dirent *dirp;
   char *pathname = NULL;
-  int curr_len, field_width = 0;
 
   if (argc == 1)
   {
@@ -24,35 +23,51 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  // find the max length of files in directory for formatting
-  int file_count = 0;
+  // initialize FileList struct that holds details of directories files
+  FileList file_list;
+  file_list.files = NULL;
+  file_list.file_capacity = 0;
+  file_list.file_count = 0;
+  file_list.field_width = 0;
+  file_list.files = alloc_mem_for_files(&file_list);
+  size_t curr_len;
+  if (!(file_list.files))
+  {
+    fprintf(stderr, "Error allocating memory for struct dirent, exiting.\n");
+    return 1;
+  }
+
   while ((dirp = readdir(dp)) != NULL)
   {
-    curr_len = strlen(dirp->d_name);
-    if (curr_len > field_width)
+    if (file_list.file_capacity <= file_list.file_count)
     {
-      field_width = curr_len;
+      file_list.files = alloc_mem_for_files(&file_list);
     }
-    file_count++;
-  }
-  rewinddir(dp); // go back to start after getting max len
-  char *file_list[file_count];
+    // add file to file_list
+    file_list.files[file_list.file_count++] = *dirp;
 
-  // TODO need to add each entry to file_list strcpy? or can just add pointer?
-  while ((dirp = readdir(dp)) != NULL)
-  {
+    // check if current entry has longest pathname, and update if it does. Used
+    // for formatting
+    curr_len = strlen(dirp->d_name);
+    if (curr_len > file_list.field_width)
+    {
+      file_list.field_width = curr_len;
+    }
   }
-  qsort(file_list, file_count, sizeof(file_list[0]), compare_filenames);
 
-  int i = 0;
-  while ((dirp = readdir(dp)) != NULL)
+  qsort(file_list.files, file_list.file_count, sizeof(file_list.files[0]),
+        compare_filenames);
+
+  struct dirent curr_file; // use to have make function more readable
+  for (size_t i = 0; i < file_list.file_count; i++)
   {
-    if (strcmp(dirp->d_name, "..") == 0 || strcmp(dirp->d_name, ".") == 0)
+    curr_file = file_list.files[i];
+    if (strcmp(curr_file.d_name, "..") == 0 ||
+        strcmp(curr_file.d_name, ".") == 0)
     {
       continue;
     }
-    printf("%-*s", field_width + 2, dirp->d_name);
-    i++;
+    printf("%-*s", (int)file_list.field_width + 2, curr_file.d_name);
     if (i % 5 == 0)
     {
       printf("\n");
