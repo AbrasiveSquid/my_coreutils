@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
+// #ifndef TIOCGWINSZ
+#include <sys/ioctl.h>
+// #endif
 
 // struct
 typedef struct
@@ -23,3 +28,14 @@ typedef struct
 int compare_filenames(const void *a, const void *b);
 
 struct dirent *alloc_mem_for_files(FileList *file_list);
+
+/*
+   Get the number of columns in characters of the current terminal window
+
+   Parameters:
+    int: fd
+      file descriptor of the terminal window to get the num of columns from
+   Returns:
+      int: of the number of columns in characters
+*/
+int get_window_columns(int fd);

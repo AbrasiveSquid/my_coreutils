@@ -58,6 +58,11 @@ int main(int argc, char *argv[])
   qsort(file_list.files, file_list.file_count, sizeof(file_list.files[0]),
         compare_filenames);
 
+  int columns =
+      (get_window_columns(STDOUT_FILENO) / ((int)file_list.field_width + 2));
+  printf("columns: %d\nfield_width: %zu\nwind_width: %d\n", columns,
+         file_list.field_width + 2, get_window_columns(STDOUT_FILENO));
+
   struct dirent curr_file; // use to have make function more readable
   for (size_t i = 0; i < file_list.file_count; i++)
   {
@@ -68,7 +73,7 @@ int main(int argc, char *argv[])
       continue;
     }
     printf("%-*s", (int)file_list.field_width + 2, curr_file.d_name);
-    if (i % 5 == 0)
+    if (i % columns == 0)
     {
       printf("\n");
     }

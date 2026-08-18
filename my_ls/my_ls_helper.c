@@ -71,3 +71,13 @@ struct dirent *alloc_mem_for_files(FileList *file_list)
     }
   }
 }
+
+int get_window_columns(int fd)
+{
+  struct winsize size;
+  if (ioctl(fd, TIOCGWINSZ, (char *)&size) < 0)
+  {
+    fprintf(stderr, "TIOCGWINSZ error");
+  }
+  return size.ws_col;
+}
