@@ -60,6 +60,11 @@ int main(int argc, char *argv[])
   qsort(file_list.files, file_list.file_count, sizeof(file_list.files[0]),
         compare_filenames);
 
+  /*
+    calculate max number of columns, and number of rows based on terminal
+    window. Then print out files in column major order, if printing out all
+    files in row-major on one line is too long.
+  */
   int max_num_columns =
       (get_window_columns(STDOUT_FILENO) / ((int)file_list.field_width + 2));
   // printf("columns: %d\nfield_width: %zu\nwind_width: %d\n", max_num_columns,
@@ -75,21 +80,20 @@ int main(int argc, char *argv[])
   //        total_col);
   struct dirent curr_file; // use to have make function more readable
   size_t row = 0, col = 0, i = 2;
+  // print out files in column-major order IF it is too many files to fit in one
+  // line of terminal window
   while (i < file_list.file_count)
   {
     curr_file = file_list.files[row + col + 2];
-    // if (strcmp(curr_file.d_name, "..") == 0 ||
-    //     strcmp(curr_file.d_name, ".") == 0)
-    // { // do nothing
-    // }
-    // else
-    // {
     printf("%-*s", (int)file_list.field_width + 2, curr_file.d_name);
-    // }
-    col += num_rows;
+    col += num_rows; // increment by num of rows because column-major order
     if (col - num_rows > total_col) // reset to go to next row
     {
-      printf("\n");
+      if (i <
+          file_list.file_count - 1) // to avoid double newline after last item
+      {
+        printf("\n");
+      }
       row++;
       col = 0;
     }
