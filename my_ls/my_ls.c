@@ -1,10 +1,12 @@
 #include "my_ls_helper.h"
+#include <locale.h>
 
 int main(int argc, char *argv[])
 {
   DIR *dp;
   struct dirent *dirp;
   char *pathname = NULL;
+  setlocale(LC_COLLATE, ""); // set locale to shell's env for sorting
 
   if (argc == 1)
   {
@@ -73,10 +75,10 @@ int main(int argc, char *argv[])
       continue;
     }
     printf("%-*s", (int)file_list.field_width + 2, curr_file.d_name);
-    if (i % columns == 0)
-    {
-      printf("\n");
-    }
+    // if (i % columns == 0)
+    // {
+    //   printf("\n");
+    // }
   }
   printf("\n");
 

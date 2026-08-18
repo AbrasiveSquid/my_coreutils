@@ -4,37 +4,38 @@
 
 int compare_filenames(const void *a, const void *b)
 {
-  const struct dirent *a_struct = (struct dirent *)a;
+  const struct dirent *a_struct = (const struct dirent *)a;
   const char *a_str = a_struct->d_name;
-  const struct dirent *b_struct = (struct dirent *)b;
+  const struct dirent *b_struct = (const struct dirent *)b;
   const char *b_str = b_struct->d_name;
 
-  int a_chr, b_chr;
-  int i = 0;
-  while (a_str[i] != '\0' && b_str[i] != '\0')
-  {
-    a_chr = tolower((unsigned char)a_str[i]);
-    b_chr = tolower((unsigned char)b_str[i]);
-
-    if (a_chr == b_chr)
-    {
-      i++;
-      continue;
-    }
-    return a_chr - b_chr;
-  }
-  if (a_str[i] == '\0' && b_str[i] == '\0') // identical strings
-  {
-    return 0;
-  }
-  else if (a_str[i] == '\0')
-  {
-    return 1; // a_str should come before b_str
-  }
-  else
-  {
-    return -1; // b_str should come before a_str
-  }
+  return strcoll(a_str, b_str);
+  // int a_chr, b_chr;
+  // int i = 0;
+  // while (a_str[i] != '\0' && b_str[i] != '\0')
+  // {
+  //   a_chr = tolower((unsigned char)a_str[i]);
+  //   b_chr = tolower((unsigned char)b_str[i]);
+  //
+  //   if (a_chr == b_chr)
+  //   {
+  //     i++;
+  //     continue;
+  //   }
+  //   return a_chr - b_chr;
+  // }
+  // if (a_str[i] == '\0' && b_str[i] == '\0') // identical strings
+  // {
+  //   return 0;
+  // }
+  // else if (a_str[i] == '\0')
+  // {
+  //   return -1; // a_str should come before b_str
+  // }
+  // else
+  // {
+  //   return 1; // b_str should come before a_str
+  // }
 }
 
 struct dirent *alloc_mem_for_files(FileList *file_list)

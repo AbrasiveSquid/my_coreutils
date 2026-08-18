@@ -10,6 +10,8 @@
 // #ifndef TIOCGWINSZ
 #include <sys/ioctl.h>
 // #endif
+#include <locale.h>
+#include <xlocale.h>
 
 // struct
 typedef struct
