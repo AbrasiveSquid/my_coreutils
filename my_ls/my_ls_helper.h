@@ -46,7 +46,10 @@ int get_window_columns(int fd);
 
    Parameters:
       files: struct dirent *
-          array of struct * that contains a strut of file details
+          array of structs that contains a strut of file details
+
+      col_widths: size_t *
+          array of size_t that represent the width of each column for printing
   Returns:
     NULL
 
@@ -54,4 +57,19 @@ int get_window_columns(int fd);
       if files was allocated on the heap it will free it's memory and return
   NULL
 */
-void *cleanup(struct dirent *files);
+void cleanup(struct dirent *files, size_t *col_widths);
+
+/*
+   allocates or reallocs memory for an array of length size
+
+   Parameters:
+      arr: size_t *
+          array of size_t
+      size: size_t
+          number of indices to allocate memory for
+
+  Returns:
+    size_t *:
+      pointer to memory allocated
+*/
+size_t *alloc_sizet_array(size_t *arr, size_t size);

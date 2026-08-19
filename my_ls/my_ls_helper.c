@@ -83,11 +83,36 @@ int get_window_columns(int fd)
   return size.ws_col;
 }
 
-void *cleanup(struct dirent *files)
+void cleanup(struct dirent *files, size_t *col_widths)
 {
   if (files)
   {
     free(files);
   }
-  return NULL;
+  if (col_widths)
+  {
+    free(col_widths);
+  }
+}
+
+size_t *alloc_sizet_array(size_t *arr, size_t size)
+{
+  if (!(arr))
+  {
+    arr = malloc(sizeof(*arr) * size);
+    if (!(arr))
+    {
+      fprintf(stderr, "error allocating memory, returning NULL\n");
+      return NULL;
+    }
+    return arr;
+  }
+
+  size_t *temp_arr = realloc(arr, sizeof(*arr) * size);
+  if (!(temp_arr))
+  {
+    fprintf(stderr, "error allocating memory, returning NULL\n");
+    return NULL;
+  }
+  return temp_arr;
 }
