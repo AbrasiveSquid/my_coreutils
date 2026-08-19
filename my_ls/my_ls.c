@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
         printf("max_col_width: %zu\n\n", max_col_width);
         row++;
       }
+      // add 2 to each one for minumum spacing between columns of 2
       width += max_col_width + 2;
       col_widths[col] = max_col_width + 2;
     }
@@ -135,30 +136,33 @@ int main(int argc, char *argv[])
       "\nnumber of rows: %zu\ntotal number of cols: %zu\nnum printable_files: "
       "%zu\n",
       num_rows, total_col, printable_files);
-  // size_t row = 0, col = 0, i = 0;
-  // // print out files in column-major order IF it is too many files to fit in
-  // one
-  // // line of terminal window
-  // struct dirent curr_file; // use to have make function more readable
-  // while (i < printable_files)
-  // {
-  //   // printf("i=%zu row=%zu col=%zu index=%zu\n", i, row, col,
-  //   //        row + (num_rows * col) + 2);
-  //   curr_file = file_list.files[row + (col * num_rows) + 2];
-  //   printf("%-*s", (int)file_list.field_width + 2, curr_file.d_name);
-  //   col++;
-  //   if (col > total_col) // reset to go to next row
-  //   {
-  //     if (i < printable_files - 1) // to avoid double newline after last item
-  //     {
-  //       printf("\n");
-  //     }
-  //     row++;
-  //     col = 0;
-  //   }
-  //   i++;
-  // }
-  // printf("\n");
+
+  row = 0, col = 0;
+  size_t i = 0;
+  /* print out files in column-major order IF it is too many files to fit in
+  one line of terminal window */
+  struct dirent curr_file; // use to have make function more readable
+  while (i < printable_files)
+  {
+    // printf("i=%zu row=%zu col=%zu index=%zu\n", i, row, col,
+    //        row + (num_rows * col) + 2);
+    printf("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n", row,
+           col, num_rows, i, row + (col * num_rows));
+    curr_file = file_list.files[row + (col * num_rows) + 2];
+    printf("%-*s", (int)col_widths[row + (col * num_rows)], curr_file.d_name);
+    col++;
+    if (col > total_col) // reset to go to next row
+    {
+      if (i < printable_files - 1) // to avoid double newline after last item
+      {
+        printf("\n");
+      }
+      row++;
+      col = 0;
+    }
+    i++;
+  }
+  printf("\n");
 
   cleanup(file_list.files, col_widths);
   return 0;
