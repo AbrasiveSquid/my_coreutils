@@ -82,3 +82,12 @@ int get_window_columns(int fd)
   }
   return size.ws_col;
 }
+
+void *cleanup(struct dirent *files)
+{
+  if (files)
+  {
+    free(files);
+  }
+  return NULL;
+}

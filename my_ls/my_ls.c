@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
       file_list.field_width = curr_len;
     }
   }
+  closedir(dp);
 
   qsort(file_list.files, file_list.file_count, sizeof(file_list.files[0]),
         compare_filenames);
@@ -101,5 +102,6 @@ int main(int argc, char *argv[])
   }
   printf("\n");
 
+  file_list.files = cleanup(file_list.files);
   return 0;
 }

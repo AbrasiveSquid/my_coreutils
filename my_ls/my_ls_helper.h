@@ -40,3 +40,18 @@ struct dirent *alloc_mem_for_files(FileList *file_list);
       int: of the number of columns in characters
 */
 int get_window_columns(int fd);
+
+/*
+   Free up any allocated memory
+
+   Parameters:
+      files: struct dirent *
+          array of struct * that contains a strut of file details
+  Returns:
+    NULL
+
+  Postcondition:
+      if files was allocated on the heap it will free it's memory and return
+  NULL
+*/
+void *cleanup(struct dirent *files);
