@@ -1,13 +1,18 @@
 # variables
 CC = gcc
 CFLAGS = -g -Wall -Wextra -std=c99 -fsanitize=address,undefined
+DEBUGFLAGS= -DDEBUG -g -Wall -Wextra -std=c99 -fsanitize=address,undefined
 TARGETS = my_ls
+DEBUG_TARGETS = my_ls_debug
 OBJECTS = my_ls.o my_ls_helper.o
-HEADERS = my_ls_helper.h
+DEBUG_OBJECTS = my_ls.o my_ls_helper.o
+HEADERS = my_ls_helper.h debug.h
 LS_TEST_TARGETS = ls_no_arg test_layout_ls_no_flags
 
 # build all
 all: $(TARGETS)
+
+debug: $(DEBUG_TARGETS)
 
 my_ls: $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@
@@ -17,6 +22,15 @@ my_ls.o: my_ls.c $(HEADERS)
 
 my_ls_helper.o: my_ls_helper.c $(HEADERS)
 	$(CC) $(CFLAGS) $< -c
+
+my_ls_debug: $(DEBUG_OBJECTS)
+	$(CC) $(DEBUGFLAGS) $^ -o $@
+
+my_ls_debug.o: my_ls.c $(HEADERS)
+	$(CC) $(DEBUGFLAGS) $< -c
+
+my_ls_helper_debug.o: my_ls_helper.c $(HEADERS)
+	$(CC) $(DEBUGFLAGS) $< -c
 
 .PHONY: clean $(LS_TEST_TARGETS)
 

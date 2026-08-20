@@ -1,3 +1,4 @@
+#include "debug.h"
 #include "my_ls_helper.h"
 #include <locale.h>
 
@@ -67,11 +68,11 @@ int main(int argc, char *argv[])
     files in row-major on one line is too long.
   */
   size_t term_width = get_window_columns(STDOUT_FILENO);
-  // printf("columns: %d\nfield_width: %zu\nwind_width: %d\n",
-  // max_num_columns, file_list.field_width + 2,
-  // get_window_columns(STDOUT_FILENO));
+  DEBUG_PRINT("columns: %d\nfield_width: %zu\nwind_width: %d\n",
+              max_num_columns, file_list.field_width + 2,
+              get_window_columns(STDOUT_FILENO));
 
-  printf("term_width: %zu\n", term_width);
+  DEBUG_PRINT("term_width: %zu\n", term_width);
   // determine number of columns and rows dependent on term width and length
   // of filenames in dir
   size_t printable_files =
@@ -108,31 +109,31 @@ int main(int argc, char *argv[])
       {
         file_name_len =
             strlen(file_list.files[row + (col * num_rows) + 2].d_name);
-        printf("length of %s: %zu\n",
-               file_list.files[row + (col * num_rows) + 2].d_name,
-               file_name_len);
+        // printf("length of %s: %zu\n",
+        //        file_list.files[row + (col * num_rows) + 2].d_name,
+        //        file_name_len);
         if (file_name_len > max_col_width)
         {
           max_col_width = file_name_len;
         }
-        printf("max_col_width: %zu\n\n", max_col_width);
+        DEBUG_PRINT("max_col_width: %zu\n\n", max_col_width);
         row++;
       }
       // add 2 to each one for minumum spacing between columns of 2
       width += max_col_width + 2;
       col_widths[col] = max_col_width + 2;
     }
-    // printf("term width: %zu\nwidth: %zu\nnum_rows: %zu\ntotal_col: %zu\n",
-    //        term_width, width, num_rows, total_col);
+    DEBUG_PRINT("term width: %zu\nwidth: %zu\nnum_rows: %zu\ntotal_col: %zu\n",
+                term_width, width, num_rows, total_col);
   } while (width > term_width);
 
-  for (size_t i = 0; i < total_col; i++)
-  {
-    printf("col %zu: %zu\n", i, col_widths[i]);
-  }
+  // for (size_t i = 0; i < total_col; i++)
+  // {
+  DEBUG_PRINT("col %zu: %zu\n", i, col_widths[i]);
+  // }
   // determine number of columns to use based on num_rows, if not even add extra
   // col
-  printf(
+  DEBUG_PRINT(
       "\nnumber of rows: %zu\ntotal number of cols: %zu\nnum printable_files: "
       "%zu\n",
       num_rows, total_col, printable_files);
@@ -144,14 +145,16 @@ int main(int argc, char *argv[])
   struct dirent curr_file; // use to have make function more readable
   while (i < printable_files)
   {
-    // printf("i=%zu row=%zu col=%zu index=%zu\n", i, row, col,
-    //        row + (num_rows * col) + 2);
-    printf("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n", row,
-           col, num_rows, i, row + (col * num_rows));
+    DEBUG_PRINT("i=%zu row=%zu col=%zu index=%zu\n", i, row, col,
+                row + (num_rows * col) + 2);
+    DEBUG_PRINT("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n "
+                "col_widths: %zu\n",
+                row, col, num_rows, i, row + (col * num_rows) + 2,
+                col_widths[col]);
     curr_file = file_list.files[row + (col * num_rows) + 2];
-    printf("%-*s", (int)col_widths[row + (col * num_rows)], curr_file.d_name);
+    printf("%-*s", (int)col_widths[col], curr_file.d_name);
     col++;
-    if (col > total_col) // reset to go to next row
+    if (col > total_col - 1) // reset to go to next row
     {
       if (i < printable_files - 1) // to avoid double newline after last item
       {
