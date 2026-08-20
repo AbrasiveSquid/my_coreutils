@@ -116,3 +116,17 @@ size_t *alloc_sizet_array(size_t *arr, size_t size)
   }
   return temp_arr;
 }
+
+void print_single_column(struct dirent *files, size_t file_count, FILE *fp)
+{
+  if (!(fp))
+  {
+    fprintf(stderr, "FILE * does not exist, cannot print files, exiting...\n");
+    return;
+  }
+  // start at 2, because ".", and ".." are not printed
+  for (size_t i = 2; i < file_count; i++)
+  {
+    fprintf(fp, "%s\n", (files + i)->d_name);
+  }
+}

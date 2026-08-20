@@ -68,9 +68,6 @@ int main(int argc, char *argv[])
     files in row-major on one line is too long.
   */
   size_t term_width = get_window_columns(STDOUT_FILENO);
-  DEBUG_PRINT("columns: %d\nfield_width: %zu\nwind_width: %d\n",
-              max_num_columns, file_list.field_width + 2,
-              get_window_columns(STDOUT_FILENO));
 
   DEBUG_PRINT("term_width: %zu\n", term_width);
   // determine number of columns and rows dependent on term width and length
@@ -109,12 +106,19 @@ int main(int argc, char *argv[])
       {
         file_name_len =
             strlen(file_list.files[row + (col * num_rows) + 2].d_name);
-        // printf("length of %s: %zu\n",
-        //        file_list.files[row + (col * num_rows) + 2].d_name,
-        //        file_name_len);
+        DEBUG_PRINT("length of %s: %zu\n",
+                    file_list.files[row + (col * num_rows) + 2].d_name,
+                    file_name_len);
         if (file_name_len > max_col_width)
         {
           max_col_width = file_name_len;
+          if (max_col_width + 2 > term_width)
+          {
+            // too wide for more than 1 col, print single column
+            print_single_column(file_list.files, file_list.file_count, stdout);
+            cleanup(file_list.files, col_widths);
+            return 0;
+          }
         }
         DEBUG_PRINT("max_col_width: %zu\n\n", max_col_width);
         row++;
@@ -127,10 +131,12 @@ int main(int argc, char *argv[])
                 term_width, width, num_rows, total_col);
   } while (width > term_width);
 
-  // for (size_t i = 0; i < total_col; i++)
-  // {
-  DEBUG_PRINT("col %zu: %zu\n", i, col_widths[i]);
-  // }
+#ifdef DEBUG
+  for (size_t i = 0; i < total_col; i++)
+  {
+    DEBUG_PRINT("col %zu: %zu\n", i, col_widths[i]);
+  }
+#endif
   // determine number of columns to use based on num_rows, if not even add extra
   // col
   DEBUG_PRINT(

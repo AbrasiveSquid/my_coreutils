@@ -73,3 +73,24 @@ void cleanup(struct dirent *files, size_t *col_widths);
       pointer to memory allocated
 */
 size_t *alloc_sizet_array(size_t *arr, size_t size);
+
+/*
+   Prints the list of file names in a single column,
+   if a filename is greater than the width,
+   will wrap filename to next column.
+
+   Parameters:
+      files: struct dirent *
+        an array of struct of the files in the directory to be printed
+
+      file_count: size_t
+        the number of files to be printed
+
+      fp: FILE *
+        where the files will be printed.
+
+    Postcondition:
+        Filenames of all the files in the given directory will
+        be printed to the FILE * fp in a single column
+*/
+void print_single_column(struct dirent *files, size_t file_count, FILE *fp);
