@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
   size_t col;
   size_t file_name_len;
   size_t *col_widths = NULL; // save width of each column for printing
-
+  size_t index;
   do
   {
     num_rows++; // increment row count each loop
@@ -104,10 +104,15 @@ int main(int argc, char *argv[])
       row = 0;
       while (row < num_rows)
       {
-        file_name_len =
-            strlen(file_list.files[row + (col * num_rows) + 2].d_name);
-        DEBUG_PRINT("length of %s: %zu\n",
-                    file_list.files[row + (col * num_rows) + 2].d_name,
+        index = row + (col * num_rows) + 2;
+        if (index > file_list.file_count - 1)
+        {
+          // index is outside bounds of files array
+          break;
+        }
+        // TODO accessing outside the index on odd number?
+        file_name_len = strlen(file_list.files[index].d_name);
+        DEBUG_PRINT("length of %s: %zu\n", file_list.files[index].d_name,
                     file_name_len);
         if (file_name_len > max_col_width)
         {
@@ -157,8 +162,12 @@ int main(int argc, char *argv[])
                 "col_widths: %zu\n",
                 row, col, num_rows, i, row + (col * num_rows) + 2,
                 col_widths[col]);
-    curr_file = file_list.files[row + (col * num_rows) + 2];
-    printf("%-*s", (int)col_widths[col], curr_file.d_name);
+    index = row + (col * num_rows) + 2; // get index for file
+    if (index < file_list.file_count)
+    {
+      curr_file = file_list.files[index];
+      printf("%-*s", (int)col_widths[col], curr_file.d_name);
+    }
     col++;
     if (col > total_col - 1) // reset to go to next row
     {
