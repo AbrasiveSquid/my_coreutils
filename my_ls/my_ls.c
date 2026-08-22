@@ -129,8 +129,16 @@ int main(int argc, char *argv[])
         row++;
       }
       // add 2 to each one for minumum spacing between columns of 2
-      width += max_col_width + 2;
-      col_widths[col] = max_col_width + 2;
+      if (col == total_col - 1)
+      {
+        width += max_col_width;
+        col_widths[col] = max_col_width;
+      }
+      else
+      {
+        width += max_col_width + 2;
+        col_widths[col] = max_col_width + 2;
+      }
     }
     DEBUG_PRINT("term width: %zu\nwidth: %zu\nnum_rows: %zu\ntotal_col: %zu\n",
                 term_width, width, num_rows, total_col);
