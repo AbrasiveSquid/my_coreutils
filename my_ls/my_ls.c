@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     // %zu\n",
     //             term_width, width, num_rows, total_col);
     DEBUG_PRINT("rows=%zu cols=%zu width=%zu\n", num_rows, total_col, width);
-  } while (width > term_width);
+  } while (width >= term_width);
 
 #ifdef DEBUG
   for (size_t i = 0; i < total_col; i++)
