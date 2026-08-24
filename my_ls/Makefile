@@ -51,8 +51,8 @@ ls_no_arg: my_ls
 
 test_layout_ls_no_flags: my_ls
 	@echo "test_layout_ls_no_flags..."
-	@script -q -c "./my_ls" /tmp/my_ls.out
-	@script -q -c "ls" /tmp/ls.out
+	@script -q -c "./my_ls" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls" /tmp/ls.out > /dev/null
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
