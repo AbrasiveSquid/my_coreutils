@@ -42,7 +42,7 @@ clean:
 ls_tests: $(LS_TEST_TARGETS)
 
 ls_no_arg: my_ls
-	@echo "ls_no_arg test..."
+	@printf "ls_no_arg test..."
 	@touch my_out sys_out
 	@./my_ls > my_out
 	@ls > sys_out
@@ -50,7 +50,7 @@ ls_no_arg: my_ls
 	@echo "passed"
 
 test_layout_ls_no_flags: my_ls
-	@echo "test_layout_ls_no_flags..."
+	@printf "test_layout_ls_no_flags..."
 	@script -q -c "./my_ls" /tmp/my_ls.out > /dev/null
 	@script -q -c "ls" /tmp/ls.out > /dev/null
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
@@ -59,8 +59,8 @@ test_layout_ls_no_flags: my_ls
 	@echo "passed"
 
 test_multiple_term_widths_ls_no_flags: my_ls
-	@echo "test_multiple_term_widths_ls_no_flags"
-	@echo "testing terminal widths 1-400..."
+	@printf "test_multiple_term_widths_ls_no_flags: "
+	@printf "testing terminal widths 1-400..."
 	@for width in {1..400}; do \
 		script -q -c "stty cols $$width; ./my_ls" /tmp/my_ls.out >/dev/null; \
 		script -q -c "stty cols $$width; ls" /tmp/ls.out >/dev/null; \
