@@ -7,7 +7,7 @@ DEBUG_TARGETS = my_ls_debug
 OBJECTS = my_ls.o my_ls_helper.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h
-LS_TEST_TARGETS = ls_no_arg test_layout_ls_no_flags
+LS_TEST_TARGETS = ls_no_arg test_layout_ls_no_flags test_multiple_term_widths_ls_no_flags
 
 # build all
 all: $(TARGETS)
@@ -59,8 +59,8 @@ test_layout_ls_no_flags: my_ls
 
 test_multiple_term_widths_ls_no_flags: my_ls
 	@echo "test_multiple_term_widths_ls_no_flags"
-	@for width in {1..200}; do \
-		echo "testing width $$width..."; \
+	@echo "testing terminal widths 1-400..."
+	@for width in {1..400}; do \
 		script -q -c "stty cols $$width; ./my_ls" /tmp/my_ls.out >/dev/null; \
 		script -q -c "stty cols $$width; ls" /tmp/ls.out >/dev/null; \
 		expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm; \
