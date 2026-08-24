@@ -1,6 +1,5 @@
 #include "debug.h"
 #include "my_ls_helper.h"
-#include <locale.h>
 
 int main(int argc, char *argv[])
 {
@@ -8,6 +7,8 @@ int main(int argc, char *argv[])
   struct dirent *dirp;
   char *pathname = NULL;
   setlocale(LC_COLLATE, ""); // set locale to shell's env for sorting
+  size_t *col_widths = NULL; // save width of each column for printing, is
+                             // cleanedup so delcared early
 
   if (argc == 1)
   {
@@ -62,6 +63,13 @@ int main(int argc, char *argv[])
   qsort(file_list.files, file_list.file_count, sizeof(file_list.files[0]),
         compare_filenames);
 
+  if (isatty(STDOUT_FILENO) != 1)
+  {
+    // printing to a file, print single column and exit program
+    print_single_column(file_list.files, file_list.file_count, stdout);
+    cleanup(file_list.files, col_widths);
+    return 0;
+  }
   /*
     calculate max number of columns, and number of rows based on terminal
     window. Then print out files in column major order, if printing out all
@@ -82,7 +90,6 @@ int main(int argc, char *argv[])
   size_t row;
   size_t col;
   size_t file_name_len;
-  size_t *col_widths = NULL; // save width of each column for printing
   size_t index;
 
   DEBUG_PRINT("Num of printable_files: %zu\n", file_list.file_count - 2);

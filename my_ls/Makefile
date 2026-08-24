@@ -43,6 +43,7 @@ ls_tests: $(LS_TEST_TARGETS)
 
 ls_no_arg: my_ls
 	@echo "ls_no_arg test..."
+	@touch my_out sys_out
 	@./my_ls > my_out
 	@ls > sys_out
 	@diff my_out sys_out
