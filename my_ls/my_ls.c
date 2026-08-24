@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
       file_list.file_count - 2; // "." and ".." aren't printed
   size_t width;
   size_t total_col;
+  size_t prev_total_col = 0;
   size_t num_rows = 0;
   size_t max_col_width;
   size_t row;
@@ -83,6 +84,8 @@ int main(int argc, char *argv[])
   size_t file_name_len;
   size_t *col_widths = NULL; // save width of each column for printing
   size_t index;
+
+  DEBUG_PRINT("Num of printable_files: %zu\n", file_list.file_count - 2);
   do
   {
     num_rows++; // increment row count each loop
@@ -90,6 +93,17 @@ int main(int argc, char *argv[])
     // 1 col
     total_col =
         (printable_files / num_rows) + (printable_files % num_rows != 0);
+    if (total_col == prev_total_col)
+    {
+      continue; // prevent calcuating same total_col twice and instead inc
+                // num_rows
+    }
+
+    else
+    {
+      prev_total_col = total_col;
+    }
+
     col_widths = alloc_sizet_array(col_widths, total_col);
     if (!(col_widths))
     {
@@ -110,10 +124,9 @@ int main(int argc, char *argv[])
           // index is outside bounds of files array
           break;
         }
-        // TODO accessing outside the index on odd number?
         file_name_len = strlen(file_list.files[index].d_name);
-        DEBUG_PRINT("length of %s: %zu\n", file_list.files[index].d_name,
-                    file_name_len);
+        // DEBUG_PRINT("length of %s: %zu\n", file_list.files[index].d_name,
+        //             file_name_len);
         if (file_name_len > max_col_width)
         {
           max_col_width = file_name_len;
@@ -125,7 +138,7 @@ int main(int argc, char *argv[])
             return 0;
           }
         }
-        DEBUG_PRINT("max_col_width: %zu\n\n", max_col_width);
+        // DEBUG_PRINT("max_col_width: %zu\n\n", max_col_width);
         row++;
       }
       // add 2 to each one for minumum spacing between columns of 2
@@ -140,8 +153,10 @@ int main(int argc, char *argv[])
         col_widths[col] = max_col_width + 2;
       }
     }
-    DEBUG_PRINT("term width: %zu\nwidth: %zu\nnum_rows: %zu\ntotal_col: %zu\n",
-                term_width, width, num_rows, total_col);
+    // DEBUG_PRINT("term width: %zu\nwidth: %zu\nnum_rows: %zu\ntotal_col:
+    // %zu\n",
+    //             term_width, width, num_rows, total_col);
+    DEBUG_PRINT("rows=%zu cols=%zu width=%zu\n", num_rows, total_col, width);
   } while (width > term_width);
 
 #ifdef DEBUG
@@ -175,18 +190,18 @@ int main(int argc, char *argv[])
     {
       curr_file = file_list.files[index];
       printf("%-*s", (int)col_widths[col], curr_file.d_name);
+      i++;
     }
     col++;
     if (col > total_col - 1) // reset to go to next row
     {
-      if (i < printable_files - 1) // to avoid double newline after last item
+      if (i < printable_files) // to avoid double newline after last item
       {
         printf("\n");
       }
       row++;
       col = 0;
     }
-    i++;
   }
   printf("\n");
 

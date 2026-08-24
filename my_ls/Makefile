@@ -59,7 +59,7 @@ test_layout_ls_no_flags: my_ls
 
 test_multiple_term_widths_ls_no_flags: my_ls
 	@echo "test_multiple_term_widths_ls_no_flags"
-	@for width in 20 30 40 53 60 79 80 81 100 120 127 160; do \
+	@for width in {1..200}; do \
 		echo "testing width $$width..."; \
 		script -q -c "stty cols $$width; ./my_ls" /tmp/my_ls.out >/dev/null; \
 		script -q -c "stty cols $$width; ls" /tmp/ls.out >/dev/null; \
