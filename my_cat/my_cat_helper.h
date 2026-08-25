@@ -42,7 +42,7 @@ typedef struct
     Postcondition:
       displays the char from fp to stdout
 */
-void print_file(FILE *fp, Options *flag);
+void print_file(FILE *fp, Options *flag, size_t *line_number);
 
 /*
    Prints out the file name fp to stdout. Takes and prints input char by char,
@@ -51,6 +51,14 @@ void print_file(FILE *fp, Options *flag);
    Parameters:
     fp: FILE *
       name of the file or stdin to print
+
+    flag: Options *
+      an Options * struct that has all the possible flags as a boolean, used to
+   check conditionals for formatted output.
+
+    line_number: size_t *
+      a counter to track the line_number for -n or -b flags that continue across
+   files
 
     Postcondition:
       displays the char from fp to stdout

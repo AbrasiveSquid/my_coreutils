@@ -5,6 +5,7 @@
 int main(int argc, char *argv[])
 {
   int exit_status = 0;
+  size_t line_number = 1;
   Options flags = {0}; // init all flags to false
   // init files array to NULL, capacity and file_count to 0
   File_List file_list = {NULL, 0, 0};
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
   // if no arguments or if only flags as arguments
   if (!(file_list.files))
   {
-    print_file(stdin, &flags);
+    print_file(stdin, &flags, &line_number);
     cleanup(&(file_list.files));
     return exit_status;
   }
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
       {
         clearerr(stdin); // removes EOF on stdin if there was a prev stdin
       }
-      print_file(stdin, &flags);
+      print_file(stdin, &flags, &line_number);
     }
     else
     {
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
         exit_status = 1; // set to 1 if a file is missing
         continue;
       }
-      print_file(fp, &flags);
+      print_file(fp, &flags, &line_number);
       fclose(fp);
     }
   }

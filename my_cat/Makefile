@@ -8,7 +8,8 @@ UNAME_S = $(shell uname -s)
 COMMON_TESTS = cat_combined_flags cat_without_newline cat_e_flag cat_number_and_blank cat_no_eof cat_escape_char cat_squeeze_test cat_help cat_show_non_print cat_show_tabs_and_non_printing cat_show_ends_and_non_printing cat_line_num cat_nonblank_line cat_version cat_multiple_stdin cat_multiple_files cat_invalid_flag cat_test_long_options cat_no_input cat_interspersed_flags cat_no_file_with_flag cat_missing_file cat_double_dash
 
 LINUX_TESTS = cat_show_ends cat_all_flags cat_show_all cat_show_tabs 
-ifeq ($(UNAME_S),LINUX)
+UNAME_S := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ifeq ($(UNAME_S),linux)
 	CAT_TEST_TARGETS = $(COMMON_TESTS) $(LINUX_TESTS)
 else
 	CAT_TEST_TARGETS = $(COMMON_TESTS)

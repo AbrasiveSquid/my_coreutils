@@ -1,7 +1,7 @@
 #include "my_cat_helper.h"
 
 // displays the contents of fp to stdout
-void print_file(FILE *fp, Options *flags)
+void print_file(FILE *fp, Options *flags, size_t *line_number)
 {
   if (fp == NULL)
   {
@@ -16,7 +16,6 @@ void print_file(FILE *fp, Options *flags)
 
   int c;
   int newline_count = 0;
-  int line_number = 1;
   bool line_start = true;
   while ((c = fgetc(fp)) != EOF)
   {
@@ -55,12 +54,12 @@ void print_file(FILE *fp, Options *flags)
     {
       if (flags->number_lines)
       {
-        printf("%6d\t", line_number++);
+        printf("%6zu\t", (*line_number)++);
         line_start = false;
       }
       else if (flags->number_nonblank_lines && c != '\n')
       {
-        printf("%6d\t", line_number++);
+        printf("%6zu\t", (*line_number)++);
         line_start = false;
       }
     }
