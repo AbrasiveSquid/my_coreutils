@@ -10,13 +10,25 @@
 #include <termios.h>
 #include <unistd.h>
 
-// struct
+// structs
+
+// contains details of files to be printed
 typedef struct
 {
-  struct dirent *files; // array of struct dirent *
-  size_t file_count;    // number of struct dirent * in files
-  size_t file_capacity; // amount of struct dirent * allocated
+  struct dirent *files; // array of struct dirent
+  size_t file_count;    // number of struct dirent  in files
+  size_t file_capacity; // amount of struct dirent  allocated
 } FileList;
+
+// attributes of number of columns and rows to be printed
+typedef struct
+{
+  size_t total_cols;
+  size_t total_rows;
+  size_t *col_widths;
+} PrintDetails;
+
+// functions
 
 /*
    Compares the file names of a and b by characters.
@@ -42,11 +54,9 @@ int get_window_columns(int fd);
 
    Parameters:
       file_list: FileList *
-          a structure that contains an array of struct dirent * and other attributes related
+          a structure that contains an array of struct dirent and other attributes related
           to the directory
 
-      col_widths: size_t *
-          array of size_t that represent the width of each column for printing
   Returns:
     NULL
 
@@ -54,7 +64,7 @@ int get_window_columns(int fd);
       Will free the file_list->files array, the FileList *, and the col_widths *
   NULL
 */
-void cleanup(FileList *file_list, size_t *col_widths);
+void cleanup(FileList *file_list);
 
 /*
    allocates or reallocs memory for an array of length size
@@ -79,7 +89,7 @@ void *alloc_array(void *arr, size_t size, size_t elem_size);
    will wrap filename to next column.
 
    Parameters:
-      files: struct dirent *
+      files: struct dirent
         an array of struct of the files in the directory to be printed
 
       file_count: size_t
@@ -105,8 +115,41 @@ void print_single_column(struct dirent *files, size_t file_count, FILE *fp);
 
   Returns:
     FileList *: a pointer to a FileList structure that contains the attributes
-        files *: a pointer to an array of struct dirent *
-        file_capacity: size_t of the amount of struct dirent * files has memory
-  allocate for file_count: size_t of the number of struct dirent * in files
+        files *: a pointer to an array of struct dirent
+        file_capacity: size_t of the amount of struct dirent files has memory
+  allocate for file_count: size_t of the number of struct dirent in files
 */
 FileList *create_file_list(char *pathname);
+
+/*
+  Prints the list of files in the file_list in column-major order
+
+  Parameters:
+      file_list: FileList *
+          a FileList structure that contains struct dirent of files to be printed, and the number
+  of files in the array
+
+  Returns:
+    int:
+      0 for success, 1 for error
+  Postcondition:
+      Will print all files to the screen in column-major order depending on terminal width
+*/
+int basic_print(FileList *file_list);
+
+/*
+  Calculates the number of columns and rows that can be printed to the screen depending of the
+  length of the file names and the terminal width
+
+  Parameters:
+    files: struct dirent
+      pointer to base of an array of struct dirent of files to be printed
+
+    file_count: size_t
+      the number of elements in files
+
+  Returns:
+    PrintDetails *:
+      contains the total number of colums and rows to be printed
+*/
+PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count);
