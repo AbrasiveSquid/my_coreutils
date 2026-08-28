@@ -1,9 +1,9 @@
-#include "debug.h"
 #include "my_ls_helper.h"
 
 int main(int argc, char *argv[])
 {
   char *pathname = NULL;
+  Options *flags = {0};      // initialize all options to false
   setlocale(LC_COLLATE, ""); // set locale to shell's env for sorting
 
   if (argc == 1)
@@ -31,25 +31,8 @@ int main(int argc, char *argv[])
     cleanup(file_list);
     return 0;
   }
-  /*
-    calculate max number of columns, and number of rows based on terminal
-    window. Then print out files in column major order, if printing out all
-    files in row-major on one line is too long.
-  */
-  basic_print(file_list);
 
-  // #ifdef DEBUG
-  //   for (size_t i = 0; i < total_col; i++)
-  //   {
-  //     DEBUG_PRINT("col %zu: %zu\n", i, col_widths[i]);
-  //   }
-  // #endif
-  //   // determine number of columns to use based on num_rows, if not even add extra
-  //   // col
-  //   DEBUG_PRINT("\nnumber of rows: %zu\ntotal number of cols: %zu\nnum printable_files: "
-  //               "%zu\n",
-  //               num_rows, total_col, printable_files);
-  //
+  basic_print(file_list);
 
   cleanup(file_list);
   return 0;

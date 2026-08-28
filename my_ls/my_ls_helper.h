@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <locale.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,11 @@ typedef struct
   size_t total_rows;
   size_t *col_widths;
 } PrintDetails;
+
+typedef struct
+{
+  bool all;
+} Options;
 
 // functions
 
