@@ -2,15 +2,13 @@
 
 #include <ctype.h>
 #include <dirent.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-// #ifndef TIOCGWINSZ
-#include <sys/ioctl.h>
-// #endif
-#include <locale.h>
 
 // struct
 typedef struct
