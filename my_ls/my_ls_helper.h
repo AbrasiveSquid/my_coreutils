@@ -13,11 +13,9 @@
 // struct
 typedef struct
 {
-  struct dirent *files;
-  size_t file_count;
-  size_t file_capacity;
-  size_t field_width; // set by the max len of a file's pathname, used for
-                      // foramtting
+  struct dirent *files; // array of struct dirent *
+  size_t file_count;    // number of struct dirent * in files
+  size_t file_capacity; // amount of struct dirent * allocated
 } FileList;
 
 /*
@@ -43,8 +41,9 @@ int get_window_columns(int fd);
    Free up any allocated memory
 
    Parameters:
-      files: struct dirent *
-          array of structs that contains a strut of file details
+      file_list: FileList *
+          a structure that contains an array of struct dirent * and other attributes related
+          to the directory
 
       col_widths: size_t *
           array of size_t that represent the width of each column for printing
@@ -52,25 +51,27 @@ int get_window_columns(int fd);
     NULL
 
   Postcondition:
-      if files was allocated on the heap it will free it's memory and return
+      Will free the file_list->files array, the FileList *, and the col_widths *
   NULL
 */
-void cleanup(struct dirent *files, size_t *col_widths);
+void cleanup(FileList *file_list, size_t *col_widths);
 
 /*
    allocates or reallocs memory for an array of length size
 
    Parameters:
-      arr: size_t *
+      arr: void *
           array of size_t
       size: size_t
           number of indices to allocate memory for
+      elem_size:
+          the size in bytes of each element in arr
 
   Returns:
-    size_t *:
-      pointer to memory allocated
+    void *:
+      pointer to memory allocated of whatever type passed as first param
 */
-size_t *alloc_sizet_array(size_t *arr, size_t size);
+void *alloc_array(void *arr, size_t size, size_t elem_size);
 
 /*
    Prints the list of file names in a single column,
@@ -92,3 +93,20 @@ size_t *alloc_sizet_array(size_t *arr, size_t size);
         be printed to the FILE * fp in a single column
 */
 void print_single_column(struct dirent *files, size_t file_count, FILE *fp);
+
+/*
+  Reads a diretory pathname and cretes a structure FileList pointer that
+  contains details of those that directory, including file details and number of
+  files
+
+  Parameters:
+    None
+
+
+  Returns:
+    FileList *: a pointer to a FileList structure that contains the attributes
+        files *: a pointer to an array of struct dirent *
+        file_capacity: size_t of the amount of struct dirent * files has memory
+  allocate for file_count: size_t of the number of struct dirent * in files
+*/
+FileList *create_file_list(char *pathname);

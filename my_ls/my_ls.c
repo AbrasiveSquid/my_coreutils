@@ -3,8 +3,6 @@
 
 int main(int argc, char *argv[])
 {
-  DIR *dp;
-  struct dirent *dirp;
   char *pathname = NULL;
   setlocale(LC_COLLATE, ""); // set locale to shell's env for sorting
   size_t *col_widths = NULL; // save width of each column for printing, is
@@ -19,55 +17,20 @@ int main(int argc, char *argv[])
     pathname = argv[1];
   }
 
-  dp = opendir(pathname);
-
-  if (!(dp))
+  FileList *file_list = create_file_list(pathname);
+  if (!(file_list))
   {
-    perror(pathname);
-    return 1;
+    cleanup(file_list, col_widths);
+    return 1; // file_list could not be created so program exits
   }
 
-  // initialize FileList struct that holds details of directories files
-  FileList file_list;
-  file_list.files = NULL;
-  file_list.file_capacity = 0;
-  file_list.file_count = 0;
-  file_list.field_width = 0;
-  file_list.files = alloc_mem_for_files(&file_list);
-  size_t curr_len;
-  if (!(file_list.files))
-  {
-    fprintf(stderr, "Error allocating memory for struct dirent, exiting.\n");
-    return 1;
-  }
-
-  while ((dirp = readdir(dp)) != NULL)
-  {
-    if (file_list.file_capacity <= file_list.file_count)
-    {
-      file_list.files = alloc_mem_for_files(&file_list);
-    }
-    // add file to file_list
-    file_list.files[file_list.file_count++] = *dirp;
-
-    // check if current entry has longest pathname, and update if it does. Used
-    // for formatting
-    curr_len = strlen(dirp->d_name);
-    if (curr_len > file_list.field_width)
-    {
-      file_list.field_width = curr_len;
-    }
-  }
-  closedir(dp);
-
-  qsort(file_list.files, file_list.file_count, sizeof(file_list.files[0]),
-        compare_filenames);
+  qsort(file_list->files, file_list->file_count, sizeof(file_list->files[0]), compare_filenames);
 
   if (isatty(STDOUT_FILENO) != 1)
   {
     // printing to a file, print single column and exit program
-    print_single_column(file_list.files, file_list.file_count, stdout);
-    cleanup(file_list.files, col_widths);
+    print_single_column(file_list->files, file_list->file_count, stdout);
+    cleanup(file_list, col_widths);
     return 0;
   }
   /*
@@ -80,8 +43,7 @@ int main(int argc, char *argv[])
   DEBUG_PRINT("term_width: %zu\n", term_width);
   // determine number of columns and rows dependent on term width and length
   // of filenames in dir
-  size_t printable_files =
-      file_list.file_count - 2; // "." and ".." aren't printed
+  size_t printable_files = file_list->file_count - 2; // "." and ".." aren't printed
   size_t width;
   size_t total_col;
   size_t prev_total_col = 0;
@@ -92,14 +54,13 @@ int main(int argc, char *argv[])
   size_t file_name_len;
   size_t index;
 
-  DEBUG_PRINT("Num of printable_files: %zu\n", file_list.file_count - 2);
+  DEBUG_PRINT("Num of printable_files: %zu\n", file_list->file_count - 2);
   do
   {
     num_rows++; // increment row count each loop
     // calculate total col dependent on num of rows and files, if not even adds
     // 1 col
-    total_col =
-        (printable_files / num_rows) + (printable_files % num_rows != 0);
+    total_col = (printable_files / num_rows) + (printable_files % num_rows != 0);
     if (total_col == prev_total_col)
     {
       continue; // prevent calcuating same total_col twice and instead inc
@@ -111,10 +72,10 @@ int main(int argc, char *argv[])
       prev_total_col = total_col;
     }
 
-    col_widths = alloc_sizet_array(col_widths, total_col);
+    col_widths = alloc_array(col_widths, total_col, sizeof(*col_widths));
     if (!(col_widths))
     {
-      cleanup(file_list.files, col_widths);
+      cleanup(file_list, col_widths);
       return 1;
     }
     // reset width variable
@@ -126,13 +87,13 @@ int main(int argc, char *argv[])
       while (row < num_rows)
       {
         index = row + (col * num_rows) + 2;
-        if (index > file_list.file_count - 1)
+        if (index > file_list->file_count - 1)
         {
           // index is outside bounds of files array
           break;
         }
-        file_name_len = strlen(file_list.files[index].d_name);
-        // DEBUG_PRINT("length of %s: %zu\n", file_list.files[index].d_name,
+        file_name_len = strlen(file_list->files[index].d_name);
+        // DEBUG_PRINT("length of %s: %zu\n", file_list->files[index].d_name,
         //             file_name_len);
         if (file_name_len > max_col_width)
         {
@@ -140,8 +101,8 @@ int main(int argc, char *argv[])
           if (max_col_width + 2 > term_width)
           {
             // too wide for more than 1 col, print single column
-            print_single_column(file_list.files, file_list.file_count, stdout);
-            cleanup(file_list.files, col_widths);
+            print_single_column(file_list->files, file_list->file_count, stdout);
+            cleanup(file_list, col_widths);
             return 0;
           }
         }
@@ -174,10 +135,9 @@ int main(int argc, char *argv[])
 #endif
   // determine number of columns to use based on num_rows, if not even add extra
   // col
-  DEBUG_PRINT(
-      "\nnumber of rows: %zu\ntotal number of cols: %zu\nnum printable_files: "
-      "%zu\n",
-      num_rows, total_col, printable_files);
+  DEBUG_PRINT("\nnumber of rows: %zu\ntotal number of cols: %zu\nnum printable_files: "
+              "%zu\n",
+              num_rows, total_col, printable_files);
 
   row = 0, col = 0;
   size_t i = 0;
@@ -186,16 +146,14 @@ int main(int argc, char *argv[])
   struct dirent curr_file; // use to have make function more readable
   while (i < printable_files)
   {
-    DEBUG_PRINT("i=%zu row=%zu col=%zu index=%zu\n", i, row, col,
-                row + (num_rows * col) + 2);
+    DEBUG_PRINT("i=%zu row=%zu col=%zu index=%zu\n", i, row, col, row + (num_rows * col) + 2);
     DEBUG_PRINT("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n "
                 "col_widths: %zu\n",
-                row, col, num_rows, i, row + (col * num_rows) + 2,
-                col_widths[col]);
+                row, col, num_rows, i, row + (col * num_rows) + 2, col_widths[col]);
     index = row + (col * num_rows) + 2; // get index for file
-    if (index < file_list.file_count)
+    if (index < file_list->file_count)
     {
-      curr_file = file_list.files[index];
+      curr_file = file_list->files[index];
       printf("%-*s", (int)col_widths[col], curr_file.d_name);
       i++;
     }
@@ -212,6 +170,6 @@ int main(int argc, char *argv[])
   }
   printf("\n");
 
-  cleanup(file_list.files, col_widths);
+  cleanup(file_list, col_widths);
   return 0;
 }
