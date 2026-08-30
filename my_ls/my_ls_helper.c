@@ -104,11 +104,6 @@ FileList *create_file_list(char *pathname)
   file_list->file_count = 0;
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
-  // if (!(file_list->files))
-  // {
-  //   fprintf(stderr, "Error allocating memory for struct dirent, exiting.\n");
-  //   return NULL;
-  // }
 
   // read all files in pathname and all to files array
   while ((dirp = readdir(dp)) != NULL)
