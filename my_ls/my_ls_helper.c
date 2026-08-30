@@ -23,7 +23,7 @@ int get_window_columns(int fd)
   return size.ws_col;
 }
 
-void cleanup(FileList *file_list)
+void cleanup(FileList *file_list, PathNames *pathnames)
 {
   // only free file_list if allocated
   if (file_list)
@@ -34,6 +34,11 @@ void cleanup(FileList *file_list)
       free(file_list->files);
     }
     free(file_list);
+  }
+
+  if (pathnames->pathnames)
+  {
+    free(pathnames->pathnames);
   }
   // // only free col_widths if mem was allocated
   // if (col_widths)
@@ -64,18 +69,20 @@ void *alloc_array(void *arr, size_t size, size_t elem_size)
   return temp_arr;
 }
 
-void print_single_column(struct dirent *files, size_t file_count, FILE *fp)
+int print_single_column_basic(struct dirent *files, size_t file_count, FILE *fp)
 {
   if (!(fp))
   {
     fprintf(stderr, "FILE * does not exist, cannot print files, exiting...\n");
-    return;
+    return 1;
   }
   // start at 2, because ".", and ".." are not printed
   for (size_t i = 2; i < file_count; i++)
   {
     fprintf(fp, "%s\n", (files + i)->d_name);
   }
+
+  return 0;
 }
 
 FileList *create_file_list(char *pathname)
@@ -124,7 +131,13 @@ FileList *create_file_list(char *pathname)
 
 int basic_print(FileList *file_list)
 {
+  int return_code = 0;
 
+  if (isatty(STDOUT_FILENO) != 1)
+  {
+    // printing to a file, print single column and exit program
+    return print_single_column_basic(file_list->files, file_list->file_count, stdout);
+  }
   PrintDetails *print_details = calc_rows_cols(file_list->files + 2, file_list->file_count - 2);
   if (!(print_details))
   {
@@ -135,37 +148,81 @@ int basic_print(FileList *file_list)
   // means only row for single col, or some error calcuating, print 1 col
   if (print_details->total_cols < 2)
   {
-    print_single_column(file_list->files, file_list->file_count, stdout);
+    return_code = print_single_column_basic(file_list->files, file_list->file_count, stdout);
     free(print_details->col_widths);
     free(print_details);
-    return 0;
+    return return_code;
   }
 
+  // size_t index;
+  // size_t row = 0, col = 0;
+  // size_t i = 0;
+  // size_t printable_file_count = file_list->file_count - 2;
+  // /* print out files in column-major order IF it is too many files to fit in
+  // one line of terminal window */
+  // struct dirent curr_file; // use to have make function more readable
+  // while (i < printable_file_count)
+  // {
+  //   DEBUG_PRINT("i=%zu row=%zu col=%zu index=%zu\n", i, row, col, row + (num_rows * col) + 2);
+  //   DEBUG_PRINT("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n "
+  //               "col_widths: %zu\n",
+  //               row, col, print_details->total_rows, i, row + (col * print_details->total_rows) +
+  //               2, print_details->col_widths[col]);
+  //   index = row + (col * print_details->total_rows) + 2; // get index for file
+  //   if (index < file_list->file_count)
+  //   {
+  //     curr_file = file_list->files[index];
+  //     printf("%-*s", (int)print_details->col_widths[col], curr_file.d_name);
+  //     i++;
+  //   }
+  //   col++;
+  //   if (col > print_details->total_cols - 1) // reset to go to next row
+  //   {
+  //     if (i < printable_file_count) // to avoid double newline after last item
+  //     {
+  //       printf("\n");
+  //     }
+  //     row++;
+  //     col = 0;
+  //   }
+  // }
+  // printf("\n");
+
+  // start at index 2  then sub 2 from count because 0, and 1 are '.' and ".."
+  char *file_names[file_list->file_count - 2];
+  for (size_t i = 2; i < file_list->file_count; i++)
+  {
+    file_names[i - 2] = file_list->files[i].d_name;
+  }
+  return_code = print_column_layout(file_names, file_list->file_count - 2, print_details);
+
+  free(print_details->col_widths);
+  free(print_details);
+  return return_code;
+}
+
+int print_column_layout(char **file_names, size_t file_count, PrintDetails *print_details)
+{
   size_t index;
   size_t row = 0, col = 0;
   size_t i = 0;
-  size_t printable_file_count = file_list->file_count - 2;
   /* print out files in column-major order IF it is too many files to fit in
   one line of terminal window */
-  struct dirent curr_file; // use to have make function more readable
-  while (i < printable_file_count)
+
+  char *curr_file;
+  while (i < file_count)
   {
-    DEBUG_PRINT("i=%zu row=%zu col=%zu index=%zu\n", i, row, col, row + (num_rows * col) + 2);
-    DEBUG_PRINT("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n "
-                "col_widths: %zu\n",
-                row, col, print_details->total_rows, i, row + (col * print_details->total_rows) + 2,
-                print_details->col_widths[col]);
-    index = row + (col * print_details->total_rows) + 2; // get index for file
-    if (index < file_list->file_count)
+    index = row + (col * print_details->total_rows); // get index for file
+    if (index < file_count)
     {
-      curr_file = file_list->files[index];
-      printf("%-*s", (int)print_details->col_widths[col], curr_file.d_name);
+      curr_file = file_names[index];
+      printf("%-*s", (int)print_details->col_widths[col], curr_file);
       i++;
     }
     col++;
     if (col > print_details->total_cols - 1) // reset to go to next row
     {
-      if (i < printable_file_count) // to avoid double newline after last item
+      if (i < file_count) // to avoid double newline after last item
       {
         printf("\n");
       }
@@ -174,9 +231,6 @@ int basic_print(FileList *file_list)
     }
   }
   printf("\n");
-
-  free(print_details->col_widths);
-  free(print_details);
   return 0;
 }
 
@@ -284,4 +338,174 @@ PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count)
   print_details->total_cols = total_col;
   print_details->total_rows = num_rows;
   return print_details;
+}
+
+int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *options)
+{
+  int arg_return_code;
+  int return_code = 0; // assume success, change only if failed pathname
+  for (int i = 1; i < size; i++)
+  {
+    if (!(argv[i][0] == '-' && argv[i][1] != '\0'))
+    {
+      // invalid option
+      fprintf(stderr, "%s: unrecognized option '%s'\nTry '%s --help' for more information.\n",
+              argv[0], argv[i], argv[0]);
+      return 1;
+    }
+    else if (argv[i][0] == '-') // check for flag indicator
+    {
+
+      if ((return_code = parse_option(argv[i], options)))
+      {
+        // flag not set properly, should return 0
+        if (return_code == 1)
+        {
+          fprintf(stderr, "%s: unrecognized option '%s'\nTry '%s --help' for more information.\n",
+                  argv[0], argv[i], argv[0]);
+        }
+        else
+        {
+          // return code is the char that is unrecognized
+          fprintf(stderr, "%s: unrecognized option '%c'\nTry '%s --help' for more information.\n",
+                  argv[0], return_code, argv[0]);
+        }
+        return 1;
+      }
+    }
+    else // default argument is a pathname
+    {
+      if (!(arg_return_code = parse_paths(argv[i], path_names)))
+      {
+        return_code = 1;
+      }
+    }
+  }
+
+  return return_code;
+}
+
+int parse_option(char *flag, unsigned int *options)
+{
+  if (flag[0] != '-')
+  {
+    return 1;
+  }
+
+  if (flag[1] == '-') // long option
+  {
+    if (strcmp(flag, "--help") == 0)
+    {
+      *options |= FLAG_HELP;
+      return 0;
+    }
+    else if (strcmp(flag, "--version") == 0)
+    {
+      *options |= FLAG_VER;
+      return 0;
+    }
+    else if (strcmp(flag, "--all") == 0)
+    {
+      *options |= FLAG_ALL;
+      return 0;
+    }
+
+    else
+    {
+      return 1;
+    }
+  }
+
+  // loop through all flags set by single argument flag
+  int i = 1;
+  while (flag[i] != '\0') // loop until null char
+  {
+    switch (flag[1])
+    {
+    case 'a':
+      *options |= FLAG_ALL;
+      break;
+    default:
+      return flag[1];
+    }
+    i++;
+  }
+
+  // not a long option
+
+  return 0;
+}
+
+int parse_paths(char *path, PathNames *path_names)
+{
+  DIR *dp = opendir(path);
+  if (!(dp))
+  {
+    fprintf(stderr, "./my_ls: cannot access: %s: No such file or directory\n", path);
+    return 1;
+  }
+  if (path_names->capacity <= path_names->count)
+  {
+    // double capacity and allocate memory for another pathname
+    path_names->capacity *= 2;
+    path_names->pathnames =
+        alloc_array(path_names->pathnames, path_names->capacity, sizeof(path_names->pathnames));
+  }
+  // add new path to path_names and increment count
+  path_names->pathnames[(path_names->count)++] = path;
+  return 0;
+}
+
+int print_path(FileList *file_list, unsigned int *options)
+{
+  int single_column_mask = 0; // if any of these flags set, always single column layout
+  int return_code = 0;
+  PrintDetails *print_details = NULL;
+
+  if (!(single_column_mask)) // output can be multi-column
+  {
+    if (*options & FLAG_ALL)
+    {
+      print_details = calc_rows_cols(file_list->files, file_list->file_count);
+    }
+
+    else
+    {
+      print_details = calc_rows_cols(file_list->files, file_list->file_count);
+    }
+    if (!(print_details))
+    {
+      fprintf(stderr, "Error calculating number of rows and columns, exiting\n");
+      return 1;
+    }
+  }
+
+  if (*options == FLAG_ALL)
+  {
+    // -a only flag set, same as basic print with '.' and ".." included
+    char *file_names[file_list->file_count];
+    for (size_t i = 0; file_list->file_count; i++)
+    {
+      file_names[i] = file_list->files->d_name;
+    }
+    return_code = print_column_layout(file_names, file_list->file_count, print_details);
+  }
+
+  else
+  {
+
+    for (size_t i = 0; i < file_list->file_count; i++)
+    {
+    }
+  }
+
+  if (print_details)
+  {
+    if (print_details->col_widths)
+    {
+      free(print_details->col_widths);
+    }
+    free(print_details);
+  }
+  return return_code;
 }
