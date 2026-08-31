@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      if (!(print_path(file_list, &options)))
+      if (print_path(file_list, &options))
         return_code = 1;
     }
   }
