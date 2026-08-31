@@ -1,0 +1,111 @@
+// contains functions related to output for my_ls program
+#ifndef MY_LS_PRINTER_H
+#define MY_LS_PRINTER_H
+
+#include "my_ls_helper.h"
+// structs
+// attributes of number of columns and rows to be printed
+typedef struct
+{
+  size_t total_cols;
+  size_t total_rows;
+  size_t *col_widths;
+} PrintDetails;
+
+/*
+  Prints the list of file names in a single column
+
+  Parameters:
+      files: struct dirent
+        an array of struct of the files in the directory to be printed
+
+      file_count: size_t
+        the number of files to be printed
+
+      fp: FILE *
+        where the files will be printed.
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+        Filenames of all the files in the given directory will
+        be printed to the FILE * fp in a single column
+*/
+int print_single_column_basic(struct dirent *files, size_t file_count, FILE *fp);
+
+/*
+  Prints the list of files in the file_list in column-major order
+
+  Parameters:
+    file_list: FileList *
+      a FileList structure that contains struct dirent of files to be printed, and the number
+      of files in the array
+
+  Returns:
+    int:
+      0 for success, 1 for error
+  Postcondition:
+      Will print all files to the screen in column-major order depending on terminal width
+*/
+int basic_print(FileList *file_list);
+
+/*
+  Prints the list of files in file_list in column major order
+
+  Parameters:
+    file_names: char**
+      an array of char* that are the file names to be printed
+
+    file_count: size_t
+      the number of elements in the file_names array
+
+    print_details: PrintDetails *
+      a pointer PrintDetails structer that contains details of number of columns and number of rows
+      and the width of each column
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+    prints the strings of file names from the file_list in column major order
+*/
+int print_column_layout(char **file_names, size_t file_count, PrintDetails *print_details);
+
+/*
+  Prints the list of files in the file_list to the output, depending on what option are set
+
+  Parameters:
+    file_list: FileList *
+      a FileList structure that contains struct dirent of files to be printed, and the number of
+      files in the array
+
+  options: int *
+    pointer to a bitmask that contains the options for formatted output
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+    prints the file strings in file_list to the output depending on what options are set
+*/
+int print_path(FileList *file_list, unsigned int *options);
+
+/*
+  Calculates the number of columns and rows that can be printed to the screen depending of the
+  length of the file names and the terminal width
+
+  Parameters:
+    files: struct dirent
+      pointer to base of an array of struct dirent of files to be printed
+
+    file_count: size_t
+      the number of elements in files
+
+  Returns:
+    PrintDetails *:
+      contains the total number of colums and rows to be printed
+*/
+PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count);
+
+#endif
