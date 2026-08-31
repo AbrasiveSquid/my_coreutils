@@ -108,4 +108,18 @@ int print_path(FileList *file_list, unsigned int *options);
 */
 PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count);
 
+/*
+  Prints the pathname to the fp. Used when multiple paths are listed as arguments
+
+  Parameters:
+    path_name: char *
+
+  Returns:
+    int:
+      0 for success, 1 for error
+
+  Postcondition:
+    prints path_name to the fp or stdout
+*/
+// int print_pathname(char *pathname); currently not using, but might refactor
 #endif

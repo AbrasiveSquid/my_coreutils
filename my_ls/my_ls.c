@@ -34,15 +34,35 @@ int main(int argc, char *argv[])
     }
   }
 
+  if (path_names.count > 1) // sort pathnames
+  {
+    qsort(path_names.pathnames, path_names.count, sizeof(*(path_names.pathnames)), compare_paths);
+  }
+
   for (size_t i = 0; i < path_names.count; i++)
   {
+    if (path_names.count > 1)
+    {
+      if (i > 0)
+      {
+        printf("\n");
+      }
+      // if multiple paths, print pathname at top
+      printf("%s:\n", path_names.pathnames[i]);
+    }
     if (file_list)
     {
       // free file_list so it can be used for next pathname
+      if (file_list->files)
+      {
+        free(file_list->files);
+        file_list->files = NULL;
+      }
       free(file_list);
+      file_list = NULL;
     }
 
-    file_list = create_file_list(path_names.pathnames[i]);
+    file_list = create_file_list(path_names.pathnames[i], options & FLAG_ALL);
     if (!(file_list))
     {
       cleanup(file_list, &path_names);
@@ -53,7 +73,8 @@ int main(int argc, char *argv[])
     qsort(file_list->files, file_list->file_count, sizeof(file_list->files[0]), compare_filenames);
 
     // check for all flag and alter file_list if required
-    set_hidden_files(file_list, options & FLAG_ALL);
+    // set_hidden_files(file_list, options & FLAG_ALL);
+
     // check if any flag set
     if (!(options) || (options == FLAG_ALL))
     {
@@ -62,10 +83,6 @@ int main(int argc, char *argv[])
       {
         return_code = 1;
       }
-    }
-    else if (options & FLAG_ALL)
-    {
-      // test if all flag set
     }
     else
     {

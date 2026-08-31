@@ -35,13 +35,20 @@ typedef struct
 #define FLAG_HELP (1u << 0)
 #define FLAG_VER (1u << 1)
 #define FLAG_ALL (1u << 2)
+#define FLAG_LIST (1u << 3)
 // functions
 
 /*
-   Compares the file names of a and b by characters.
+  Compares the filenames of files of a and b use locale aware sorting
    Returns positive int if a > b, negative value if a < b, otherwise 0.
 */
 int compare_filenames(const void *a, const void *b);
+
+/*
+  Compares the pathnames of a and b use locale aware sorting
+  Returns positive int if a > b, negative value if a < b, otherwise 0.
+*/
+int compare_paths(const void *a, const void *b);
 
 struct dirent *alloc_mem_for_files(FileList *file_list);
 
@@ -99,8 +106,11 @@ void *alloc_array(void *arr, size_t size, size_t elem_size);
   files
 
   Parameters:
-    None
+    pathname: char *
+      string that represents a pathname to a file or directory
 
+    hidden_files: bool
+      if true, includes . files, otherwise excludes them
 
   Returns:
     FileList *: a pointer to a FileList structure that contains the attributes
@@ -108,7 +118,7 @@ void *alloc_array(void *arr, size_t size, size_t elem_size);
         file_capacity: size_t of the amount of struct dirent files has memory
   allocate for file_count: size_t of the number of struct dirent in files
 */
-FileList *create_file_list(char *pathname);
+FileList *create_file_list(char *pathname, bool hidden_files);
 
 /*
   Parses a string for command line arguments and sets the appropriate flags that are preceded by a
@@ -147,7 +157,7 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
   Postcondition:
     The appropriate bit that matches the option flag will be set to a 1 bit.
 */
-int parse_option(char *flag, unsigned int *options);
+int parse_options(char *flag, unsigned int *options);
 
 /*
    Determines if a path is a legitimate directory and adds it to the path_names struct.
@@ -167,25 +177,5 @@ int parse_option(char *flag, unsigned int *options);
     path_names.count
 */
 int parse_paths(char *path, PathNames *path_names);
-
-/*
-  Checks if all flag set and if it is, makes no change to file list.
-  If all flag not set, sets base address of file list to 1 past dotfiles
-
-  Parameters:
-    file_list: FileList *
-      a FileList structure that contains struct dirent of files to be printed, and the number of
-      files in the array
-
-    all_flag: int
-      A single bit that is 0 if all flag not set, or 1 if it is
-
-  Returns:
-    int: 0 if success, 1 if failure
-
-  Postcondition:
-    if all_flag is set, will change file_list.offset to be 1 past the last dotfile
-*/
-int set_hidden_files(FileList *file_list, int all_flag);
 
 #endif

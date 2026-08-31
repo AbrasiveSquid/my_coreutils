@@ -1,7 +1,6 @@
 /* Contains the funciton definitions to support my_ls */
 
 #include "my_ls_helper.h"
-#include "debug.h"
 
 int compare_filenames(const void *a, const void *b)
 {
@@ -10,6 +9,13 @@ int compare_filenames(const void *a, const void *b)
   const struct dirent *b_struct = (const struct dirent *)b;
   const char *b_str = b_struct->d_name;
 
+  return strcoll(a_str, b_str);
+}
+
+int compare_paths(const void *a, const void *b)
+{
+  const char *a_str = *(const char **)a;
+  const char *b_str = *(const char **)b;
   return strcoll(a_str, b_str);
 }
 
@@ -69,7 +75,7 @@ void *alloc_array(void *arr, size_t size, size_t elem_size)
   return temp_arr;
 }
 
-FileList *create_file_list(char *pathname)
+FileList *create_file_list(char *pathname, bool hidden_files)
 {
   DIR *dp;
   struct dirent *dirp;
@@ -100,6 +106,11 @@ FileList *create_file_list(char *pathname)
   // read all files in pathname and all to files array
   while ((dirp = readdir(dp)) != NULL)
   {
+    // if hidden_files not set, skips all dotfiles
+    if (!hidden_files && ((*dirp).d_name[0] == '.'))
+    {
+      continue;
+    }
     if (file_list->file_capacity <= file_list->file_count)
     {
       file_list->file_capacity *= 2;
@@ -122,7 +133,7 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
   {
     if (argv[i][0] == '-') // check for flag indicator
     {
-      if ((return_code = parse_option(argv[i], options)))
+      if ((return_code = parse_options(argv[i], options)))
       {
         // flag not set properly, should return 0
         if (return_code == 1)
@@ -158,7 +169,7 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
   return return_code;
 }
 
-int parse_option(char *flag, unsigned int *options)
+int parse_options(char *flag, unsigned int *options)
 {
   if (flag[0] != '-')
   {
@@ -189,7 +200,7 @@ int parse_option(char *flag, unsigned int *options)
     }
   }
 
-  // loop through all flags set by single argument flag
+  // loop through all flags set by single argument flag, and if flag is valid, sets bitmask
   int i = 1;
   while (flag[i] != '\0') // loop until null char
   {
@@ -198,13 +209,14 @@ int parse_option(char *flag, unsigned int *options)
     case 'a':
       *options |= FLAG_ALL;
       break;
+    case 'l':
+      *options |= FLAG_LIST;
+      break;
     default:
       return flag[1];
     }
     i++;
   }
-
-  // not a long option
 
   return 0;
 }
@@ -228,28 +240,4 @@ int parse_paths(char *path, PathNames *path_names)
   path_names->pathnames[(path_names->count)++] = path;
   closedir(dp);
   return 0;
-}
-
-int set_hidden_files(FileList *file_list, int all_flag)
-{
-  if (all_flag) // if flag set, no change and returns
-  {
-    return 0;
-  }
-  size_t i = 0;
-  for (; i < file_list->file_count; i++)
-  {
-    if (file_list->files[i].d_name[0] != '.')
-    {
-      break; // end of dotfiles
-    }
-  }
-  if (file_list->files[i].d_name[0] == '.')
-  {
-    // no non-dotfiles, exit
-    return 0;
-  }
-  // set files to first non-dotfile and decrease file_count
-  file_list->offset += i;
-  return 0; // success
 }
