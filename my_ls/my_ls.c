@@ -50,17 +50,9 @@ int main(int argc, char *argv[])
       // if multiple paths, print pathname at top
       printf("%s:\n", path_names.pathnames[i]);
     }
-    if (file_list)
-    {
-      // free file_list so it can be used for next pathname
-      if (file_list->files)
-      {
-        free(file_list->files);
-        file_list->files = NULL;
-      }
-      free(file_list);
-      file_list = NULL;
-    }
+
+    free_file_list(file_list);
+    file_list = NULL;
 
     file_list = create_file_list(path_names.pathnames[i], options & FLAG_ALL);
     if (!(file_list))
@@ -71,9 +63,6 @@ int main(int argc, char *argv[])
     }
     // sort files by LOCALE
     qsort(file_list->files, file_list->file_count, sizeof(file_list->files[0]), compare_filenames);
-
-    // check for all flag and alter file_list if required
-    // set_hidden_files(file_list, options & FLAG_ALL);
 
     // check if any flag set
     if (!(options) || (options == FLAG_ALL))

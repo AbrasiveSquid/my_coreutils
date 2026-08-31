@@ -32,14 +32,14 @@ typedef struct
         Filenames of all the files in the given directory will
         be printed to the FILE * fp in a single column
 */
-int print_single_column_basic(struct dirent *files, size_t file_count, FILE *fp);
+int print_single_column_basic(FileDetails **files, size_t file_count, FILE *fp);
 
 /*
   Prints the list of files in the file_list in column-major order
 
   Parameters:
     file_list: FileList *
-      a FileList structure that contains struct dirent of files to be printed, and the number
+      a FileList structure that contains FileDetails of files to be printed, and the number
       of files in the array
 
   Returns:
@@ -77,7 +77,7 @@ int print_column_layout(char **file_names, size_t file_count, PrintDetails *prin
 
   Parameters:
     file_list: FileList *
-      a FileList structure that contains struct dirent of files to be printed, and the number of
+      a FileList structure that contains FileDetails of files to be printed, and the number of
       files in the array
 
   options: int *
@@ -97,7 +97,7 @@ int print_path(FileList *file_list, unsigned int *options);
 
   Parameters:
     files: struct dirent
-      pointer to base of an array of struct dirent of files to be printed
+      pointer to base of an array of FileDetails of files to be printed
 
     file_count: size_t
       the number of elements in files
@@ -106,7 +106,7 @@ int print_path(FileList *file_list, unsigned int *options);
     PrintDetails *:
       contains the total number of colums and rows to be printed
 */
-PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count);
+PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
 
 /*
   Prints the pathname to the fp. Used when multiple paths are listed as arguments

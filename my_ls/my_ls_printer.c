@@ -1,19 +1,17 @@
 #include "my_ls_printer.h"
+#include "my_ls_helper.h"
 
 int basic_print(FileList *file_list)
 {
   int return_code = 0;
-  // set so the start of files array + the offset to account for hidden files
-  struct dirent *curr_file_list = file_list->files + file_list->offset;
-  size_t file_count = file_list->file_count - file_list->offset;
 
   if (isatty(STDOUT_FILENO) != 1)
   {
     // printing to a file, print single column and exit program
     // use offset when calculating file count and base address
-    return print_single_column_basic(curr_file_list, file_count, stdout);
+    return print_single_column_basic(file_list->files, file_list->file_count, stdout);
   }
-  PrintDetails *print_details = calc_rows_cols(curr_file_list, file_count);
+  PrintDetails *print_details = calc_rows_cols(file_list->files, file_list->file_count);
   if (!(print_details))
   {
     fprintf(stderr, "Error calcualting number of rows and columns, exiting\n");
@@ -23,19 +21,19 @@ int basic_print(FileList *file_list)
   // means only row for single col, or some error calcuating, print 1 col
   if (print_details->total_cols < 2)
   {
-    return_code = print_single_column_basic(curr_file_list, file_count, stdout);
+    return_code = print_single_column_basic(file_list->files, file_list->file_count, stdout);
     free(print_details->col_widths);
     free(print_details);
     return return_code;
   }
 
   // start at index 2  then sub 2 from count because 0, and 1 are '.' and ".."
-  char *file_names[file_count];
-  for (size_t i = 0; i < file_count; i++)
+  char *file_names[file_list->file_count];
+  for (size_t i = 0; i < file_list->file_count; i++)
   {
-    file_names[i] = curr_file_list[i].d_name;
+    file_names[i] = file_list->files[i]->filename;
   }
-  return_code = print_column_layout(file_names, file_count, print_details);
+  return_code = print_column_layout(file_names, file_list->file_count, print_details);
 
   free(print_details->col_widths);
   free(print_details);
@@ -75,7 +73,7 @@ int print_column_layout(char **file_names, size_t file_count, PrintDetails *prin
   return 0;
 }
 
-PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count)
+PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count)
 {
 
   size_t term_width = get_window_columns(STDOUT_FILENO);
@@ -139,7 +137,7 @@ PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count)
           // index is outside bounds of files array
           break;
         }
-        file_name_len = strlen(files[index].d_name);
+        file_name_len = strlen(files[index]->filename);
         if (file_name_len > max_col_width)
         {
           max_col_width = file_name_len;
@@ -173,17 +171,16 @@ PrintDetails *calc_rows_cols(struct dirent *files, size_t file_count)
   return print_details;
 }
 
-int print_single_column_basic(struct dirent *files, size_t file_count, FILE *fp)
+int print_single_column_basic(FileDetails **files, size_t file_count, FILE *fp)
 {
   if (!(fp))
   {
     fprintf(stderr, "FILE * does not exist, cannot print files, exiting...\n");
     return 1;
   }
-  // start at 2, because ".", and ".." are not printed
   for (size_t i = 0; i < file_count; i++)
   {
-    fprintf(fp, "%s\n", (files + i)->d_name);
+    fprintf(fp, "%s\n", files[i]->filename);
   }
 
   return 0;
@@ -219,7 +216,7 @@ int print_path(FileList *file_list, unsigned int *options)
     char *file_names[file_list->file_count];
     for (size_t i = 0; file_list->file_count; i++)
     {
-      file_names[i] = file_list->files->d_name;
+      file_names[i] = file_list->files[i]->filename;
     }
     return_code = print_column_layout(file_names, file_list->file_count, print_details);
   }

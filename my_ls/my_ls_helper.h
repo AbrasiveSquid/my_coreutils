@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -23,13 +24,19 @@ typedef struct
   size_t capacity;
 } PathNames;
 
+// Details about a single file
+typedef struct
+{
+  char *filename;
+  struct stat *file_stats; // stat details
+} FileDetails;
+
 // contains details of files to be printed
 typedef struct
 {
-  struct dirent *files; // array of struct dirent
+  FileDetails **files;  // array of FileDetails
   size_t file_count;    // number of struct dirent  in files
   size_t file_capacity; // amount of struct dirent  allocated
-  size_t offset;        // used for printing hidden vs non-hidden files
 } FileList;
 
 #define FLAG_HELP (1u << 0)
@@ -84,6 +91,21 @@ int get_window_columns(int fd);
 void cleanup(FileList *file_list, PathNames *path_names);
 
 /*
+  Free memory allocated in a file_list
+
+  Parameters:
+    file_list: FileList *
+      pointer to a FileList structure
+
+  Returns:
+    None
+
+  Postcondition:
+    if memory was allocated for a FileList, will free up each .files FileDetails as well
+*/
+void free_file_list(FileList *file_list);
+
+/*
    allocates or reallocs memory for an array of length size
 
    Parameters:
@@ -116,9 +138,59 @@ void *alloc_array(void *arr, size_t size, size_t elem_size);
     FileList *: a pointer to a FileList structure that contains the attributes
         files *: a pointer to an array of struct dirent
         file_capacity: size_t of the amount of struct dirent files has memory
-  allocate for file_count: size_t of the number of struct dirent in files
+          allocate for file_count: size_t of the number of struct dirent in files
 */
 FileList *create_file_list(char *pathname, bool hidden_files);
+
+/*
+  Creates a FileList structure for a directory that contains details of that directory
+
+  Parameters:
+    pathname: char *
+      string that represents a pathname to a directory
+
+    hidden_files: bool
+      if true, includes . files, otherwise excludes them
+
+  Returns:
+    FileList *: a pointer to a FileList structure that contains the attributes
+        files *: a pointer to an array of struct dirent
+        file_capacity: size_t of the amount of struct dirent files has memory
+        allocate for file_count: size_t of the number of struct dirent in files
+*/
+FileList *create_file_list_dir(char *pathname, bool hidden_files);
+
+/*
+  Creates a FileList structure for a regular file
+
+  Parameters:
+    pathname: char *
+      string that represents a pathname to a file
+
+  Returns:
+    FileList *: a pointer to a FileList structure that contains the attributes
+        files *: a pointer to an array of struct dirent
+        file_capacity: size_t of the amount of struct dirent files has memory
+        allocate for file_count: size_t of the number of struct dirent in files
+*/
+FileList *create_file_list_file(char *pathname);
+
+/*
+  Creates a structure of FileDetails and allocates memory, returns a pointer. Contains the filename
+  and stat strucutre of information
+
+  Parameters:
+    pathname: char *
+      string that represents a pathname to a file
+
+    filename: char *
+      string that represents a filename
+
+  Returns:
+    FileDetails *:
+      a pointer to a FileDetails structure
+*/
+FileDetails *create_file_details(char *pathname, char *filename);
 
 /*
   Parses a string for command line arguments and sets the appropriate flags that are preceded by a

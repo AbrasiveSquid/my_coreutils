@@ -8,8 +8,8 @@ OBJECTS = my_ls.o my_ls_helper.o my_ls_printer.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h my_ls_printer.h
 COMMON_TESTS = 
-MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac
-LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux
+MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac test_file_path_mac
+LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux
 MAC_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_mac 
 LINUX_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_linux
 
@@ -195,6 +195,24 @@ test_multiple_paths_mac: my_ls
 	@printf "test_multiple_paths_mac..."
 	@script -q  /tmp/my_ls.out ./my_ls ../ . > /dev/null
 	@script -q /tmp/ls.out gls ../ . > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+
+test_file_path_linux: my_ls
+	@printf "test_file_path..."
+	@script -q -c "./my_ls ./my_ls.c" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls ./my_ls.c" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+
+test_file_path_mac: my_ls
+	@printf "test_file_path..."
+	@script -q  /tmp/my_ls.out ./my_ls ./my_ls.c > /dev/null
+	@script -q /tmp/ls.out ls ./my_ls.c > /dev/null
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
