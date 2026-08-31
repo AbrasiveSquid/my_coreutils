@@ -14,7 +14,8 @@ int main(int argc, char *argv[])
                                            sizeof(*(path_names.pathnames)))))
   {
     // couldn't allocate memory for pathnames, so program exits
-    return_code = 2; // program will continue and try to process and valid paths
+    fprintf(stderr, "Error allocating memory in main, exiting\n");
+    return 1;
   }
   unsigned int options = 0;  // initialize all options to false
   setlocale(LC_COLLATE, ""); // set locale to shell's env for sorting
