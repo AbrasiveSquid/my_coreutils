@@ -8,16 +8,20 @@ OBJECTS = my_ls.o my_ls_helper.o my_ls_printer.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h my_ls_printer.h
 COMMON_TESTS = 
-MAC_TESTS = ls_no_arg_mac test_layout_ls_no_flags_mac test_layout_ls_show_all_flag_mac test_multiple_term_widths_ls_no_flags_mac 
-LINUX_TESTS = ls_no_arg_linux test_layout_ls_no_flags_linux test_layout_ls_show_all_flag_linux test_multiple_term_widths_ls_no_flags_linux
+MAC_TESTS = ls_no_arg_mac test_layout_ls_no_flags_mac test_layout_ls_show_all_flag_mac 
+LINUX_TESTS = ls_no_arg_linux test_layout_ls_no_flags_linux test_layout_ls_show_all_flag_linux 
+MAC_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_mac 
+LINUX_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_linux
 
 
 # test setup
 UNAME_S := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ifeq ($(UNAME_S), linux)
 	LS_TEST_TARGETS = $(COMMON_TESTS) $(LINUX_TESTS)
+	LS_SLOW_TESTS_TARGETS = $(LINUX_SLOW_TESTS)
 else ifeq ($(UNAME_S), darwin) # mac target
 	LS_TEST_TARGETS = $(COMMON_TESTS) $(MAC_TESTS)
+	LS_SLOW_TESTS_TARGETS = $(MAC_SLOW_TESTS)
 else
 	LS_TEST_TARGETS = $(COMMON_TESTS)
 endif
@@ -48,14 +52,16 @@ my_ls_debug.o: my_ls.c $(HEADERS)
 my_ls_helper_debug.o: my_ls_helper.c $(HEADERS)
 	$(CC) $(DEBUGFLAGS) $< -c -o $@
 
-.PHONY: clean $(LS_TEST_TARGETS)
+.PHONY: clean $(LS_TEST_TARGETS) ls_tests ls_quick_tests $(LS_SLOW_TESTS_TARGETS)
 
 clean:
 	rm -f $(TARGETS) $(DEBUG_TARGETS) *.o *.out my_out* sys_out*
 
 
 # tests
-ls_tests: $(LS_TEST_TARGETS)
+ls_tests: $(LS_TEST_TARGETS) $(LS_SLOW_TESTS_TARGETS)
+
+ls_quick_tests: $(LS_TEST_TARGETS) 
 
 ls_no_arg_linux: my_ls
 	@printf "ls_no_arg test..."
