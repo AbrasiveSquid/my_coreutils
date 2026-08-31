@@ -77,7 +77,7 @@ int print_single_column_basic(struct dirent *files, size_t file_count, FILE *fp)
     return 1;
   }
   // start at 2, because ".", and ".." are not printed
-  for (size_t i = 2; i < file_count; i++)
+  for (size_t i = 0; i < file_count; i++)
   {
     fprintf(fp, "%s\n", (files + i)->d_name);
   }
@@ -107,8 +107,9 @@ FileList *create_file_list(char *pathname)
 
   // initialize file_list then allocate memory for files
   file_list->files = NULL;
-  file_list->file_capacity = 4; // set inital capacity for 5
+  file_list->file_capacity = 4; // set inital capacity for 4
   file_list->file_count = 0;
+  file_list->offset = 0;
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
 
@@ -132,13 +133,17 @@ FileList *create_file_list(char *pathname)
 int basic_print(FileList *file_list)
 {
   int return_code = 0;
+  // set so the start of files array + the offset to account for hidden files
+  struct dirent *curr_file_list = file_list->files + file_list->offset;
+  size_t file_count = file_list->file_count - file_list->offset;
 
   if (isatty(STDOUT_FILENO) != 1)
   {
     // printing to a file, print single column and exit program
-    return print_single_column_basic(file_list->files, file_list->file_count, stdout);
+    // use offset when calculating file count and base address
+    return print_single_column_basic(curr_file_list, file_count, stdout);
   }
-  PrintDetails *print_details = calc_rows_cols(file_list->files + 2, file_list->file_count - 2);
+  PrintDetails *print_details = calc_rows_cols(curr_file_list, file_count);
   if (!(print_details))
   {
     fprintf(stderr, "Error calcualting number of rows and columns, exiting\n");
@@ -148,53 +153,19 @@ int basic_print(FileList *file_list)
   // means only row for single col, or some error calcuating, print 1 col
   if (print_details->total_cols < 2)
   {
-    return_code = print_single_column_basic(file_list->files, file_list->file_count, stdout);
+    return_code = print_single_column_basic(curr_file_list, file_count, stdout);
     free(print_details->col_widths);
     free(print_details);
     return return_code;
   }
 
-  // size_t index;
-  // size_t row = 0, col = 0;
-  // size_t i = 0;
-  // size_t printable_file_count = file_list->file_count - 2;
-  // /* print out files in column-major order IF it is too many files to fit in
-  // one line of terminal window */
-  // struct dirent curr_file; // use to have make function more readable
-  // while (i < printable_file_count)
-  // {
-  //   DEBUG_PRINT("i=%zu row=%zu col=%zu index=%zu\n", i, row, col, row + (num_rows * col) + 2);
-  //   DEBUG_PRINT("\nrow: %zu\ncol: %zu\nnum_rows: %zu\ni: %zu\nindex: %zu\n "
-  //               "col_widths: %zu\n",
-  //               row, col, print_details->total_rows, i, row + (col * print_details->total_rows) +
-  //               2, print_details->col_widths[col]);
-  //   index = row + (col * print_details->total_rows) + 2; // get index for file
-  //   if (index < file_list->file_count)
-  //   {
-  //     curr_file = file_list->files[index];
-  //     printf("%-*s", (int)print_details->col_widths[col], curr_file.d_name);
-  //     i++;
-  //   }
-  //   col++;
-  //   if (col > print_details->total_cols - 1) // reset to go to next row
-  //   {
-  //     if (i < printable_file_count) // to avoid double newline after last item
-  //     {
-  //       printf("\n");
-  //     }
-  //     row++;
-  //     col = 0;
-  //   }
-  // }
-  // printf("\n");
-
   // start at index 2  then sub 2 from count because 0, and 1 are '.' and ".."
-  char *file_names[file_list->file_count - 2];
-  for (size_t i = 2; i < file_list->file_count; i++)
+  char *file_names[file_count];
+  for (size_t i = 0; i < file_count; i++)
   {
-    file_names[i - 2] = file_list->files[i].d_name;
+    file_names[i] = curr_file_list[i].d_name;
   }
-  return_code = print_column_layout(file_names, file_list->file_count - 2, print_details);
+  return_code = print_column_layout(file_names, file_count, print_details);
 
   free(print_details->col_widths);
   free(print_details);
@@ -373,7 +344,14 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
       }
     }
   }
-
+  // if no pathname set, default to current directory
+  if (!(path_names->count))
+  {
+    if ((arg_return_code = parse_paths(".", path_names)))
+    {
+      return_code = 1;
+    }
+  }
   return return_code;
 }
 
@@ -500,4 +478,28 @@ int print_path(FileList *file_list, unsigned int *options)
     free(print_details);
   }
   return return_code;
+}
+
+int set_hidden_files(FileList *file_list, int all_flag)
+{
+  if (all_flag) // if flag set, no change and returns
+  {
+    return 0;
+  }
+  size_t i = 0;
+  for (; i < file_list->file_count; i++)
+  {
+    if (file_list->files[i].d_name[0] != '.')
+    {
+      break; // end of dotfiles
+    }
+  }
+  if (file_list->files[i].d_name[0] == '.')
+  {
+    // no non-dotfiles, exit
+    return 0;
+  }
+  // set files to first non-dotfile and decrease file_count
+  file_list->offset += i;
+  return 0; // success
 }

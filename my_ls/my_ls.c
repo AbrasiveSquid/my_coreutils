@@ -51,13 +51,20 @@ int main(int argc, char *argv[])
     // sort files by LOCALE
     qsort(file_list->files, file_list->file_count, sizeof(file_list->files[0]), compare_filenames);
 
+    // check for all flag and alter file_list if required
+    set_hidden_files(file_list, options & FLAG_ALL);
     // check if any flag set
-    if (!(options)) // if options == 0, then no flag set
+    if (!(options) || (options == FLAG_ALL))
     {
+      // basic print is no option set or only all is set
       if (basic_print(file_list)) // non-zero return means error
       {
         return_code = 1;
       }
+    }
+    else if (options & FLAG_ALL)
+    {
+      // test if all flag set
     }
     else
     {

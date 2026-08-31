@@ -27,6 +27,7 @@ typedef struct
   struct dirent *files; // array of struct dirent
   size_t file_count;    // number of struct dirent  in files
   size_t file_capacity; // amount of struct dirent  allocated
+  size_t offset;        // used for printing hidden vs non-hidden files
 } FileList;
 
 // attributes of number of columns and rows to be printed
@@ -181,7 +182,7 @@ int print_column_layout(char **file_names, size_t file_count, PrintDetails *prin
   Parameters:
     file_list: FileList *
       a FileList structure that contains struct dirent of files to be printed, and the number of
-  files in the array
+      files in the array
 
   options: int *
     pointer to a bitmask that contains the options for formatted output
@@ -268,3 +269,23 @@ int parse_option(char *flag, unsigned int *options);
     path_names.count
 */
 int parse_paths(char *path, PathNames *path_names);
+
+/*
+  Checks if all flag set and if it is, makes no change to file list.
+  If all flag not set, sets base address of file list to 1 past dotfiles
+
+  Parameters:
+    file_list: FileList *
+      a FileList structure that contains struct dirent of files to be printed, and the number of
+      files in the array
+
+    all_flag: int
+      A single bit that is 0 if all flag not set, or 1 if it is
+
+  Returns:
+    int: 0 if success, 1 if failure
+
+  Postcondition:
+    if all_flag is set, will change file_list.offset to be 1 past the last dotfile
+*/
+int set_hidden_files(FileList *file_list, int all_flag);
