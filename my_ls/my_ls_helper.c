@@ -346,16 +346,8 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
   int return_code = 0; // assume success, change only if failed pathname
   for (int i = 1; i < size; i++)
   {
-    if (!(argv[i][0] == '-' && argv[i][1] != '\0'))
+    if (argv[i][0] == '-') // check for flag indicator
     {
-      // invalid option
-      fprintf(stderr, "%s: unrecognized option '%s'\nTry '%s --help' for more information.\n",
-              argv[0], argv[i], argv[0]);
-      return 1;
-    }
-    else if (argv[i][0] == '-') // check for flag indicator
-    {
-
       if ((return_code = parse_option(argv[i], options)))
       {
         // flag not set properly, should return 0
@@ -370,12 +362,12 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
           fprintf(stderr, "%s: unrecognized option '%c'\nTry '%s --help' for more information.\n",
                   argv[0], return_code, argv[0]);
         }
-        return 1;
+        return return_code;
       }
     }
     else // default argument is a pathname
     {
-      if (!(arg_return_code = parse_paths(argv[i], path_names)))
+      if ((arg_return_code = parse_paths(argv[i], path_names)))
       {
         return_code = 1;
       }

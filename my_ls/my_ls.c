@@ -6,6 +6,7 @@ int main(int argc, char *argv[])
   int return_code = 0;
   PathNames path_names; // init struct and then allocate memory for 1 pathname
   path_names.pathnames = NULL;
+  path_names.count = 0;
   path_names.capacity = 1; // set to 1 as tool most often has a single pathname
   FileList *file_list = NULL;
   if (!(path_names.pathnames = alloc_array(path_names.pathnames, path_names.capacity,
