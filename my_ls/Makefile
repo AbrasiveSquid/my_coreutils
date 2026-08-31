@@ -8,8 +8,8 @@ OBJECTS = my_ls.o my_ls_helper.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h
 COMMON_TESTS = 
-MAC_TESTS = ls_no_arg_mac test_layout_ls_no_flags_mac test_multiple_term_widths_ls_no_flags_mac 
-LINUX_TESTS = ls_no_arg_linux test_layout_ls_no_flags_linux test_multiple_term_widths_ls_no_flags_linux
+MAC_TESTS = ls_no_arg_mac test_layout_ls_no_flags_mac test_layout_ls_show_all_flag_mac test_multiple_term_widths_ls_no_flags_mac 
+LINUX_TESTS = ls_no_arg_linux test_layout_ls_no_flags_linux test_layout_ls_show_all_flag_linux test_multiple_term_widths_ls_no_flags_linux
 
 
 # test setup
@@ -93,7 +93,7 @@ test_layout_ls_no_flags_mac: my_ls
 test_layout_ls_show_all_flag_linux: my_ls
 	@printf "test_layout_ls_show_all_flag_linux..."
 	@script -q -c "./my_ls -a" /tmp/my_ls.out > /dev/null
-	@script -q -c "ls" /tmp/ls.out > /dev/null
+	@script -q -c "ls -a" /tmp/ls.out > /dev/null
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
@@ -127,7 +127,7 @@ test_multiple_term_widths_ls_no_flags_linux: my_ls
 		expand -t 8 /tmp/ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm; \
 		diff -u /tmp/my_ls.norm /tmp/ls.norm || exit 1; \
 	done
-	@echo "passed"
+	@echo " passed"
 
 test_multiple_term_widths_ls_no_flags_mac: my_ls
 	@for width in {1..400}; do \
@@ -138,4 +138,4 @@ test_multiple_term_widths_ls_no_flags_mac: my_ls
 		expand -t 8 /tmp/ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm; \
 		diff -u /tmp/my_ls.norm /tmp/ls.norm || exit 1; \
 	done
-	@echo "passed"
+	@echo " passed"

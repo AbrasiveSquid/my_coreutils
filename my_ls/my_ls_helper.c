@@ -423,6 +423,7 @@ int parse_paths(char *path, PathNames *path_names)
   }
   // add new path to path_names and increment count
   path_names->pathnames[(path_names->count)++] = path;
+  closedir(dp);
   return 0;
 }
 
