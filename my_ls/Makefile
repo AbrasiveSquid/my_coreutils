@@ -7,7 +7,20 @@ DEBUG_TARGETS = my_ls_debug
 OBJECTS = my_ls.o my_ls_helper.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h
-LS_TEST_TARGETS = ls_no_arg test_layout_ls_no_flags test_multiple_term_widths_ls_no_flags
+COMMON_TESTS = ls_no_arg 
+MAC_TESTS = test_layout_ls_no_flags_mac test_multiple_term_widths_ls_no_flags_mac 
+LINUX_TESTS = test_layout_ls_no_flags_linux test_multiple_term_widths_ls_no_flags_linux
+
+
+# test setup
+UNAME_S := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ifeq ($(UNAME_S), linux)
+	LS_TEST_TARGETS = $(COMMON_TESTS) $(LINUX_TESTS)
+else ifeq ($(UNAME_S), darwin) # mac target
+	LS_TEST_TARGETS = $(COMMON_TESTS) $(MAC_TESTS)
+else
+	LS_TEST_TARGETS = $(COMMON_TESTS)
+endif
 
 # build all
 all: $(TARGETS)
@@ -47,9 +60,10 @@ ls_no_arg: my_ls
 	@./my_ls > my_out
 	@ls > sys_out
 	@diff my_out sys_out
+	@rm -f my_out sys_out
 	@echo "passed"
 
-test_layout_ls_no_flags: my_ls
+test_layout_ls_no_flags_linux: my_ls
 	@printf "test_layout_ls_no_flags..."
 	@script -q -c "./my_ls" /tmp/my_ls.out > /dev/null
 	@script -q -c "ls" /tmp/ls.out > /dev/null
@@ -58,12 +72,31 @@ test_layout_ls_no_flags: my_ls
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@echo "passed"
 
-test_multiple_term_widths_ls_no_flags: my_ls
-	@printf "test_multiple_term_widths_ls_no_flags: "
-	@printf "testing terminal widths 1-400..."
+test_layout_ls_no_flags_mac: my_ls
+	@printf "test_layout_ls_no_flags..."
+	@script -q  /tmp/my_ls.out ./my_ls> /dev/null
+	@script -q /tmp/ls.out gls > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+
+test_multiple_term_widths_ls_no_flags_linux: my_ls
 	@for width in {1..400}; do \
+	printf "\rtest_multiple_term_widths_ls_no_flags: testing terminal widths 1-400...%3d" $$width; \
 		script -q -c "stty cols $$width; ./my_ls" /tmp/my_ls.out >/dev/null; \
 		script -q -c "stty cols $$width; ls" /tmp/ls.out >/dev/null; \
+		expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm; \
+		expand -t 8 /tmp/ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm; \
+		diff -u /tmp/my_ls.norm /tmp/ls.norm || exit 1; \
+	done
+	@echo "passed"
+
+test_multiple_term_widths_ls_no_flags_mac: my_ls
+	@for width in {1..400}; do \
+	printf "\rtest_multiple_term_widths_ls_no_flags: testing terminal widths 1-400...%3d" $$width; \
+		script -q /tmp/my_ls.out sh -c "stty cols $$width; ./my_ls" >/dev/null; \
+		script -q /tmp/ls.out sh -c "stty cols $$width; gls" >/dev/null; \
 		expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm; \
 		expand -t 8 /tmp/ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm; \
 		diff -u /tmp/my_ls.norm /tmp/ls.norm || exit 1; \
