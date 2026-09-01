@@ -17,6 +17,20 @@ int compare_paths(const void *a, const void *b)
   return strcoll(a_str, b_str);
 }
 
+void sort_pathnames(PathNames *pathnames)
+{
+  if (pathnames->dir_count > 1)
+  {
+    qsort(pathnames->dir_names, pathnames->dir_count, sizeof(*(pathnames->dir_names)),
+          compare_paths);
+  }
+  if (pathnames->file_count > 1)
+  {
+    qsort(pathnames->file_names, pathnames->file_count, sizeof(*(pathnames->file_names)),
+          compare_paths);
+  }
+}
+
 int get_window_columns(int fd)
 {
   struct winsize size;
@@ -27,13 +41,15 @@ int get_window_columns(int fd)
   return size.ws_col;
 }
 
-void cleanup(FileList *file_list, PathNames *pathnames)
+void cleanup(PathNames *pathnames)
 {
-  // only free file_list if allocated
-  free_file_list(file_list);
-  if (pathnames->pathnames)
+  if (pathnames->file_names)
   {
-    free(pathnames->pathnames);
+    free(pathnames->file_names);
+  }
+  if (pathnames->dir_names)
+  {
+    free(pathnames->dir_names);
   }
 }
 
@@ -79,35 +95,35 @@ void *alloc_array(void *arr, size_t size, size_t elem_size)
   return temp_arr;
 }
 
-FileList *create_file_list(char *pathname, bool hidden_files)
-{
-  struct stat buf;
-  FileList *file_list = NULL;
-
-  // checks if file can be accessed or exists
-  if (stat(pathname, &buf) < 0)
-  {
-    perror(pathname);
-    return NULL;
-  }
-
-  // creates file_list depending on file type
-  if (S_ISREG(buf.st_mode))
-  {
-    file_list = create_file_list_file(pathname);
-  }
-  else if (S_ISDIR(buf.st_mode))
-  {
-    file_list = create_file_list_dir(pathname, hidden_files);
-  }
-
-  if (!(file_list))
-  {
-    perror(pathname);
-    return NULL;
-  }
-  return file_list;
-}
+// FileList *create_file_list(char *pathname, bool hidden_files)
+// {
+//   struct stat buf;
+//   FileList *file_list = NULL;
+//
+//   // checks if file can be accessed or exists
+//   if (stat(pathname, &buf) < 0)
+//   {
+//     perror(pathname);
+//     return NULL;
+//   }
+//
+//   // creates file_list depending on file type
+//   if (S_ISREG(buf.st_mode))
+//   {
+//     file_list = create_file_list_file(pathname);
+//   }
+//   else if (S_ISDIR(buf.st_mode))
+//   {
+//     file_list = create_file_list_dir(pathname, hidden_files);
+//   }
+//
+//   if (!(file_list))
+//   {
+//     perror(pathname);
+//     return NULL;
+//   }
+//   return file_list;
+// }
 
 FileList *create_file_list_dir(char *pathname, bool hidden_files)
 {
@@ -180,12 +196,10 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
   return file_list;
 }
 
-FileList *create_file_list_file(char *pathname)
+FileList *create_file_list_files(char **filenames, size_t size, bool hidden_files)
 {
   FileList *file_list = malloc(sizeof(*file_list));
-  FileDetails *curr_file = create_file_details(pathname, pathname);
-
-  if (!(file_list) || !(curr_file))
+  if (!(file_list))
   {
     fprintf(stderr, "Error allocating memory in create_file_list, exiting.\n");
     return NULL;
@@ -193,12 +207,30 @@ FileList *create_file_list_file(char *pathname)
 
   // initialize file_list then allocate memory for files
   file_list->files = NULL;
-  file_list->file_capacity = 1; // set inital capacity for 4
+  file_list->file_capacity = size; // capacity to size
   file_list->file_count = 0;
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
 
-  file_list->files[(file_list->file_count)++] = curr_file;
+  // loop through filenames and create file_details and add to file_list
+  FileDetails *curr_file = NULL;
+  for (size_t i = 0; i < size; i++)
+  {
+    if (!hidden_files)
+    {
+      if (filenames[i][0] == '.' && (strlen(filenames[i]) > 1) && filenames[i][1] != '/')
+        continue; // skip dotfiles if hidden_files flag not set
+    }
+
+    curr_file = create_file_details(filenames[i], filenames[i]);
+    if (!(curr_file))
+    {
+      fprintf(stderr, "Error allocating memory in create_file_list, exiting.\n");
+      free_file_list(file_list);
+      return NULL;
+    }
+    file_list->files[(file_list->file_count)++] = curr_file;
+  }
   return file_list;
 }
 
@@ -243,7 +275,7 @@ FileDetails *create_file_details(char *pathname, char *filename)
 
 int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *options)
 {
-  int arg_return_code;
+  int arg_return_code = 0;
   int return_code = 0; // assume success, change only if failed pathname
   for (int i = 1; i < size; i++)
   {
@@ -275,7 +307,7 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
     }
   }
   // if no pathname set, default to current directory
-  if (!(path_names->count) && !arg_return_code)
+  if (!(path_names->dir_count || path_names->file_count) && !arg_return_code)
   // if arg_return_code == 1, means only invalid paths given and program shouldn't continue
   {
     if ((arg_return_code = parse_paths(".", path_names)))
@@ -347,14 +379,35 @@ int parse_paths(char *path, PathNames *path_names)
     fprintf(stderr, "./my_ls: cannot access '%s': No such file or directory\n", path);
     return 1;
   }
-  if (path_names->capacity <= path_names->count)
+
+  // check if path is a file or directory and add to correct array in pathnames
+  if (S_ISREG(buf.st_mode))
   {
-    // double capacity and allocate memory for another pathname
-    path_names->capacity *= 2;
-    path_names->pathnames =
-        alloc_array(path_names->pathnames, path_names->capacity, sizeof(*(path_names->pathnames)));
+    if (path_names->file_capacity <= path_names->file_count)
+    { // double capacity and allocate memory
+      path_names->file_capacity *= 2;
+      path_names->file_names = alloc_array(path_names->file_names, path_names->file_capacity,
+                                           sizeof(*(path_names->file_names)));
+    }
+    path_names->file_names[(path_names->file_count++)] = path;
   }
+  else if (S_ISDIR(buf.st_mode))
+  {
+
+    if (path_names->dir_capacity <= path_names->dir_count)
+    { // double capacity and allocate memory
+      path_names->dir_capacity *= 2;
+      path_names->dir_names = alloc_array(path_names->dir_names, path_names->dir_capacity,
+                                          sizeof(*(path_names->dir_names)));
+    }
+    path_names->dir_names[(path_names->dir_count++)] = path;
+  }
+  else
+  {
+    fprintf(stderr, "./my_ls: cannot access '%s': No such file or directory\n", path);
+    return 1;
+  }
+
   // add new path to path_names and increment count
-  path_names->pathnames[(path_names->count)++] = path;
   return 0;
 }

@@ -13,6 +13,30 @@ typedef struct
 } PrintDetails;
 
 /*
+  Controller function that calls other functions to print files
+
+  Parameters:
+    arr: char **
+      an array of char * that represent filenames or direcotires
+
+    size: size_t
+      the number of elements in arr to be printed
+
+    options: unsigned int
+      bitmask that represents options for formatted output
+
+    dir_file: bool
+      flag to determine if arr contains files or directories
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+    Calls other method that will print the items in the arr to the stdout
+*/
+int print_items(char **arr, size_t size, unsigned int options, bool dir_file);
+
+/*
   Prints the list of file names in a single column
 
   Parameters:
@@ -89,7 +113,7 @@ int print_column_layout(char **file_names, size_t file_count, PrintDetails *prin
   Postcondition:
     prints the file strings in file_list to the output depending on what options are set
 */
-int print_path(FileList *file_list, unsigned int *options);
+int print_path(FileList *file_list, unsigned int options);
 
 /*
   Calculates the number of columns and rows that can be printed to the screen depending of the
@@ -101,6 +125,10 @@ int print_path(FileList *file_list, unsigned int *options);
 
     file_count: size_t
       the number of elements in files
+
+    options: unsigned int
+      bitmask that represents options for formatted output
+
 
   Returns:
     PrintDetails *:

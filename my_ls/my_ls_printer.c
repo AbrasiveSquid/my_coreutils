@@ -1,6 +1,66 @@
 #include "my_ls_printer.h"
 #include "my_ls_helper.h"
 
+int print_items(char **arr, size_t size, unsigned int options, bool dir_file)
+{
+  FileList *file_list = NULL;
+  int return_code = 0;
+  int file_count = size;
+
+  for (size_t i = 0; i < size; i++)
+  {
+    // if multiple directories, prints directory above filelist
+    if (dir_file && size > 1)
+    {
+      if (i > 0)
+      {
+        printf("\n");
+      }
+      printf("%s:\n", arr[i]);
+    }
+
+    // frees file_list (if not NULL) and sets pointer to NULL to prevent dangling ptr
+    free_file_list(file_list);
+    file_list = NULL;
+
+    if (dir_file)
+    {
+      file_list = create_file_list_dir(arr[i], options & FLAG_ALL);
+    }
+    else
+    {
+      file_list = create_file_list_files(arr, file_count, options & FLAG_ALL);
+      // reset count to 1 as files are just printed one time
+      size = 1;
+    }
+    if (!(file_list))
+    {
+      return_code = 1;
+      return return_code;
+    }
+
+    // sort file_list by LOCALE
+    qsort(file_list->files, file_list->file_count, sizeof(*(file_list->files)), compare_filenames);
+
+    // check if a no flag set
+    if (!(options & ~FLAG_ALL)) // FLAG_ALL already handled during path creation
+    {
+      if (basic_print(file_list))
+      {
+        return_code = 1;
+      }
+    }
+    else
+    {
+      if (print_path(file_list, options))
+        return_code = 1;
+    }
+  }
+
+  free_file_list(file_list);
+  return return_code;
+}
+
 int basic_print(FileList *file_list)
 {
   int return_code = 0;
@@ -186,7 +246,7 @@ int print_single_column_basic(FileDetails **files, size_t file_count, FILE *fp)
   return 0;
 }
 
-int print_path(FileList *file_list, unsigned int *options)
+int print_path(FileList *file_list, unsigned int options)
 {
   int single_column_mask = 0; // if any of these flags set, always single column layout
   int return_code = 0;
@@ -194,7 +254,7 @@ int print_path(FileList *file_list, unsigned int *options)
 
   if (!(single_column_mask)) // output can be multi-column
   {
-    if (*options & FLAG_ALL)
+    if (options & FLAG_ALL)
     {
       print_details = calc_rows_cols(file_list->files, file_list->file_count);
     }
@@ -210,7 +270,7 @@ int print_path(FileList *file_list, unsigned int *options)
     }
   }
 
-  if (*options == FLAG_ALL)
+  if (options == FLAG_ALL)
   {
     // -a only flag set, same as basic print with '.' and ".." included
     char *file_names[file_list->file_count];

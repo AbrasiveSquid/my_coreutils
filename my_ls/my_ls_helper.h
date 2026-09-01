@@ -19,9 +19,13 @@
 // pathname - contains details of the pathnames to directories whose contents will be listed
 typedef struct
 {
-  char **pathnames;
-  size_t count;
-  size_t capacity;
+  char **dir_names;
+  size_t dir_count;
+  size_t dir_capacity;
+
+  char **file_names;
+  size_t file_count;
+  size_t file_capacity;
 } PathNames;
 
 // Details about a single file
@@ -57,7 +61,22 @@ int compare_filenames(const void *a, const void *b);
 */
 int compare_paths(const void *a, const void *b);
 
-struct dirent *alloc_mem_for_files(FileList *file_list);
+/*
+  Examines if PathNames ptr contains elements in either the dir_names or file_names array, if so
+  sorts them
+
+  Parameters:
+    pathnames: PathNames *
+      pointer to a structure that contains arrays of dir_names and file_names to be sorted
+
+  Returns:
+    None
+
+  Postcondition:
+    if pathnames.dir_names and/or path_names.file_names contains any elements, those elements will
+    be sorted according to LOCALE.
+*/
+void sort_pathnames(PathNames *pathnames);
 
 /*
    Get the number of columns in characters of the current terminal window
@@ -88,7 +107,7 @@ int get_window_columns(int fd);
       Will free the file_list->files array, the FileList *, and the path_names.pathnames array
   NULL
 */
-void cleanup(FileList *file_list, PathNames *path_names);
+void cleanup(PathNames *path_names);
 
 /*
   Free memory allocated in a file_list
@@ -164,8 +183,14 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files);
   Creates a FileList structure for a regular file
 
   Parameters:
-    pathname: char *
-      string that represents a pathname to a file
+    filenames: char **
+      array of char * that represent filenames
+
+    size: size_t
+      number of elements in filenames
+
+    hidden_files: bool
+      flag if dotfiles should be included in the FileList
 
   Returns:
     FileList *: a pointer to a FileList structure that contains the attributes
@@ -173,7 +198,7 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files);
         file_capacity: size_t of the amount of struct dirent files has memory
         allocate for file_count: size_t of the number of struct dirent in files
 */
-FileList *create_file_list_file(char *pathname);
+FileList *create_file_list_files(char **filenames, size_t size, bool hidden_files);
 
 /*
   Creates a structure of FileDetails and allocates memory, returns a pointer. Contains the filename

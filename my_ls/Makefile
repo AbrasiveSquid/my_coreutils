@@ -220,8 +220,8 @@ test_file_path_mac: my_ls
 
 test_multiple_file_path_linux: my_ls
 	@printf "test_multiple_file_path..."
-	@script -q -c "./my_ls my_ls.c my_ls.h my_ls_helper.h" /tmp/my_ls.out > /dev/null
-	@script -q -c "ls my_ls.c my_ls.h my_ls_helper.h" /tmp/ls.out > /dev/null
+	@script -q -c "./my_ls my_ls.c my_ls_helper.c my_ls_helper.h" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls my_ls.c my_ls_helper.c my_ls_helper.h" /tmp/ls.out > /dev/null
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
@@ -229,8 +229,8 @@ test_multiple_file_path_linux: my_ls
 
 test_multiple_file_path_mac: my_ls
 	@printf "test_multiple_file_path..."
-	@script -q -c "./my_ls my_ls.c my_ls.h my_ls_helper.h" /tmp/my_ls.out > /dev/null
-	@script -q -c "ls my_ls.c my_ls.h my_ls_helper.h" /tmp/ls.out > /dev/null
+	@script -q ./my_ls my_ls_helper.c my_ls_helper.h /tmp/my_ls.out > /dev/null
+	@script -q ls my_ls.c my_ls_helper.c my_ls_helper.h /tmp/ls.out > /dev/null
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
