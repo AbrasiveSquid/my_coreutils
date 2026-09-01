@@ -27,11 +27,27 @@ int main(int argc, char *argv[])
   }
   else
   {
-    if ((parse_arguments(argc, argv, &path_names, &options)))
+    int arg_code;
+    if ((arg_code = parse_arguments(argc, argv, &path_names, &options)))
     {
-      // error parsing the arguments, exit with failure
-      cleanup(file_list, &path_names);
-      return 1;
+      // code 0, success, proram ignores this conditional
+
+      if (arg_code == 1)
+      { // code 1, program with option flags, program will exit
+        cleanup(file_list, &path_names);
+        return 1;
+      }
+      else if (arg_code == 2)
+      {
+        // invalid path name, set the error return code, but program to continue
+        return_code = 1;
+      }
+      else
+      {
+        fprintf(stderr, "Invalid return code, program will exit\n");
+        cleanup(file_list, &path_names);
+        return return_code;
+      }
     }
   }
 

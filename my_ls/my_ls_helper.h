@@ -226,6 +226,10 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
       a pointer to an unsigned bit that is a bitmask to store boolean flags that affect program
       output
 
+  Returns:
+    int:
+      0 for success, 1 for failed option flags (program should terminate). 2 for invalid path name,
+      program may not terminate
   Postcondition:
     The appropriate bit that matches the option flag will be set to a 1 bit.
 */

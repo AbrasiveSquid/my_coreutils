@@ -270,12 +270,13 @@ int parse_arguments(int size, char **argv, PathNames *path_names, unsigned int *
     {
       if ((arg_return_code = parse_paths(argv[i], path_names)))
       {
-        return_code = 1;
+        return_code = 2;
       }
     }
   }
   // if no pathname set, default to current directory
-  if (!(path_names->count))
+  if (!(path_names->count) && !arg_return_code)
+  // if arg_return_code == 1, means only invalid paths given and program shouldn't continue
   {
     if ((arg_return_code = parse_paths(".", path_names)))
     {
@@ -343,7 +344,7 @@ int parse_paths(char *path, PathNames *path_names)
   // DIR *dp = opendir(path);
   if (stat(path, &buf) < 0)
   {
-    fprintf(stderr, "./my_ls: cannot access: %s: No such file or directory\n", path);
+    fprintf(stderr, "./my_ls: cannot access '%s': No such file or directory\n", path);
     return 1;
   }
   if (path_names->capacity <= path_names->count)
