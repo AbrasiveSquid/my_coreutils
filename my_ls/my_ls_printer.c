@@ -50,10 +50,12 @@ int print_items(char **arr, size_t size, unsigned int options, bool dir_file)
         return_code = 1;
       }
     }
-    else
+    else if (options & FLAG_LIST)
     {
-      if (print_path(file_list, options))
+      if (print_long_listing(file_list, options))
+      {
         return_code = 1;
+      }
     }
   }
 
@@ -298,4 +300,32 @@ int print_path(FileList *file_list, unsigned int options)
     free(print_details);
   }
   return return_code;
+}
+
+int print_long_listing(FileList *file_list, unsigned int options)
+{
+  // print to long_listing
+  int flag_test = 0;               // this flag will test bits that affect long listing print only
+  int blocksize = get_blocksize(); // gets blocksize depending on env var
+  FileDetails *curr_file = NULL;
+  // print sum of blocksize
+  printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
+
+  char *perm_str = malloc(sizeof(char *) * 11); // allocate 11 bytes for permission string
+  if (!(perm_str))
+  {
+    fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
+    return 1;
+  }
+
+  for (size_t i = 0; i < file_list->file_count; i++)
+  {
+    curr_file = file_list->files[i];
+    printf("%s ", build_file_perm_string(perm_str, 11, curr_file->file_stats));
+
+    printf("\n");
+  }
+
+  free(perm_str);
+  return 0;
 }

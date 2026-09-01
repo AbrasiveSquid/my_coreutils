@@ -95,36 +95,6 @@ void *alloc_array(void *arr, size_t size, size_t elem_size)
   return temp_arr;
 }
 
-// FileList *create_file_list(char *pathname, bool hidden_files)
-// {
-//   struct stat buf;
-//   FileList *file_list = NULL;
-//
-//   // checks if file can be accessed or exists
-//   if (stat(pathname, &buf) < 0)
-//   {
-//     perror(pathname);
-//     return NULL;
-//   }
-//
-//   // creates file_list depending on file type
-//   if (S_ISREG(buf.st_mode))
-//   {
-//     file_list = create_file_list_file(pathname);
-//   }
-//   else if (S_ISDIR(buf.st_mode))
-//   {
-//     file_list = create_file_list_dir(pathname, hidden_files);
-//   }
-//
-//   if (!(file_list))
-//   {
-//     perror(pathname);
-//     return NULL;
-//   }
-//   return file_list;
-// }
-
 FileList *create_file_list_dir(char *pathname, bool hidden_files)
 {
   DIR *dp;
@@ -154,7 +124,7 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
   file_list->file_count = 0;
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
-
+  file_list->blocksize_sum = 0;
   // read all files in pathname and all to files array
   while ((dirp = readdir(dp)) != NULL)
   {
@@ -190,6 +160,10 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
     }
     // add file to file_list
     file_list->files[file_list->file_count++] = curr_file;
+    if (S_ISREG(curr_file->file_stats->st_mode))
+    {
+      file_list->blocksize_sum += curr_file->file_stats->st_blocks; // sum of blocksize
+    }
   }
   closedir(dp);
 
@@ -209,6 +183,7 @@ FileList *create_file_list_files(char **filenames, size_t size, bool hidden_file
   file_list->files = NULL;
   file_list->file_capacity = size; // capacity to size
   file_list->file_count = 0;
+  file_list->blocksize_sum = 0; // init value but not used for files by themselves
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
 
@@ -410,4 +385,89 @@ int parse_paths(char *path, PathNames *path_names)
 
   // add new path to path_names and increment count
   return 0;
+}
+
+int get_blocksize(void)
+{
+  int blocksize = 1024; // set the default
+  int size = 4;
+  char *env_arr[size];
+
+  env_arr[0] = (getenv("LS_BLOCK_SIZE"));
+  env_arr[1] = (getenv("BLOCK_SIZE"));
+  env_arr[2] = (getenv("BLOCKSIZE"));
+  env_arr[3] = (getenv("POSIXLY_CORRECT"));
+
+  for (int i = 0; i < size; i++)
+  {
+
+    if (env_arr[i])
+      return atoi(env_arr[i]);
+  }
+  return blocksize;
+}
+
+char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats)
+{
+
+  if (size < 11)
+  {
+    fprintf(stderr, "Not enough memory allocated for permission string, exiting\n");
+    return NULL;
+  }
+
+  // reset string
+  for (int i = 0; i < size - 1; i++)
+  {
+    c_ptr[i] = '-';
+  }
+  c_ptr[size - 1] = '\0'; // set nullbyte
+
+  // set file bit
+  if (S_ISDIR(file_stats->st_mode))
+  {
+    c_ptr[0] = 'd';
+  }
+
+  // set userbits
+  if (file_stats->st_mode & S_IRUSR)
+  {
+    c_ptr[1] = 'r';
+  }
+  if (file_stats->st_mode & S_IWUSR)
+  {
+    c_ptr[2] = 'w';
+  }
+  if (file_stats->st_mode & S_IXUSR)
+  {
+    c_ptr[3] = 'x';
+  }
+  // set group bits
+  if (file_stats->st_mode & S_IRGRP)
+  {
+    c_ptr[4] = 'r';
+  }
+  if (file_stats->st_mode & S_IWGRP)
+  {
+    c_ptr[5] = 'w';
+  }
+  if (file_stats->st_mode & S_IXGRP)
+  {
+    c_ptr[6] = 'x';
+  }
+  // set other bits
+  if (file_stats->st_mode & S_IROTH)
+  {
+    c_ptr[7] = 'r';
+  }
+  if (file_stats->st_mode & S_IWOTH)
+  {
+    c_ptr[8] = 'w';
+  }
+  if (file_stats->st_mode & S_IXOTH)
+  {
+    c_ptr[9] = 'x';
+  }
+
+  return c_ptr;
 }

@@ -104,8 +104,8 @@ int print_column_layout(char **file_names, size_t file_count, PrintDetails *prin
       a FileList structure that contains FileDetails of files to be printed, and the number of
       files in the array
 
-  options: int *
-    pointer to a bitmask that contains the options for formatted output
+    options: int *
+      pointer to a bitmask that contains the options for formatted output
 
   Returns:
     int: 0 for success, 1 for error
@@ -137,6 +137,25 @@ int print_path(FileList *file_list, unsigned int options);
 PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
 
 /*
+  Handles the printing for long listing format (when the -l flag is set)
+
+  Parameters:
+    file_list: FileList *
+      a FileList structure that contains FileDetails of files to be printed, and the number of
+      files in the array
+
+    options: int *
+      pointer to a bitmask that contains the options for formatted output
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+    prints the strings of filenames in file_list to stdout in the long listing format
+*/
+int print_long_listing(FileList *file_list, unsigned int options);
+
+/*
   Prints the pathname to the fp. Used when multiple paths are listed as arguments
 
   Parameters:
@@ -150,4 +169,5 @@ PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
     prints path_name to the fp or stdout
 */
 // int print_pathname(char *pathname); currently not using, but might refactor
+
 #endif

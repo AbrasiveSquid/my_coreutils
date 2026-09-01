@@ -41,6 +41,7 @@ typedef struct
   FileDetails **files;  // array of FileDetails
   size_t file_count;    // number of struct dirent  in files
   size_t file_capacity; // amount of struct dirent  allocated
+  size_t blocksize_sum;
 } FileList;
 
 #define FLAG_HELP (1u << 0)
@@ -279,4 +280,40 @@ int parse_options(char *flag, unsigned int *options);
 */
 int parse_paths(char *path, PathNames *path_names);
 
+/*
+  Returns a blocksize as an int depending on what environment variables are set, if none are set
+  defaults to 1024
+
+  Parameters:
+    None
+
+  Returns:
+    int as a blocksize
+*/
+int get_blocksize(void);
+
+/*
+  Builds a string reprsenting the permissions a file has on unix
+
+  Parameters:
+    c_ptr: char *
+      pointer to an array of characters
+
+    size: int
+      amount of bytes allocated for c_ptr
+
+    file_stats: struct stat *
+      a pointer that contains file details to extract permissions from
+
+  Returns:
+    a string of 10 characters plus the null char that represents permissions
+    d for directory, r for read, w for write, x for execute
+    - in first position for regular file
+    examples:
+      ----------
+      -rwxr-xr-x
+      drw-------
+
+*/
+char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats);
 #endif
