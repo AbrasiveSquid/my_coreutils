@@ -14,6 +14,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 // structs
@@ -331,4 +332,41 @@ char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats);
     positive int
 */
 int largest_num_digits_filesize(const FileList *file_list);
+
+/*
+  Builds a string representation of a human readable data in local time from epoch time
+
+  Parameters:
+    epoch_time: time_t
+      time to convert to human readable data, example 'Aug 24 12:56'
+
+    str: char *
+      pointer to write the string into
+
+    str_len: int
+      number of bytes allocated in str to write to
+
+  Returns:
+    string of human readable time: 'Aug 24 12:56'
+*/
+char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_len);
+
+/*
+  Converts a number to a string, if number is negative, returns NULL
+
+  Parameters:
+    num: time_t
+      number to convert, must be non-negative integer
+
+    str: char *
+      string pointer to put in num
+
+    size: int
+      number of bytes allocated for str
+
+  Returns:
+    char *, that is the integer number converted to a string
+*/
+char *num_to_str(time_t num, char *str, int size);
+
 #endif

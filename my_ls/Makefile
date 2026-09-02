@@ -271,3 +271,21 @@ test_invalid_path_mac: my_ls
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@echo "passed"
+
+test_long_list_linux: my_ls
+	@printf "test_long_list..."
+	@script -q -c "./my_ls -l" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+
+test_long_list_mac: my_ls
+	@printf "test_long_list..."
+	@script -q  /tmp/my_ls.out ./my_ls -l > /dev/null
+	@script -q /tmp/ls.out gls -l > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"

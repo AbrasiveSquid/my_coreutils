@@ -496,3 +496,139 @@ int largest_num_digits_filesize(const FileList *file_list)
   }
   return max_num_digits;
 }
+
+char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_len)
+{
+  struct tm *local_time;
+  char day[3];         // holds the day in localtime as as string
+  char time_of_day[6]; // holds the time of day 24 hour clock
+
+  if (str_len < 13)
+  {
+    fprintf(stderr, "Number of bytes allocated to str in epoch_to_human_readable_localtime, is "
+                    "insufficient, exiting\n");
+    return NULL;
+  }
+  str[12] = '\0'; // set null byte at end of string
+
+  local_time = localtime(&epoch_time);
+
+  // set month
+  switch (local_time->tm_mon)
+  {
+  case 0:
+    strncpy(str, "Jan", 4);
+    break;
+  case 1:
+    strncpy(str, "Feb", 4);
+    break;
+  case 2:
+    strncpy(str, "Mar", 4);
+    break;
+  case 3:
+    strncpy(str, "Apr", 4);
+    break;
+  case 4:
+    strncpy(str, "May", 4);
+    break;
+  case 5:
+    strncpy(str, "Jun", 4);
+    break;
+  case 6:
+    strncpy(str, "Jul", 4);
+    break;
+  case 7:
+    strncpy(str, "Aug", 4);
+    break;
+  case 8:
+    strncpy(str, "Sep", 4);
+    break;
+  case 9:
+    strncpy(str, "Oct", 4);
+    break;
+  case 10:
+    strncpy(str, "Nov", 4);
+    break;
+  case 11:
+    strncpy(str, "Dec", 4);
+    break;
+  default:
+    fprintf(stderr, "Invalid month in epoch_to_human_readable_localtime: %d, exiting\n",
+            local_time->tm_mon);
+    return NULL;
+    break;
+  }
+
+  str[3] = ' ';
+
+  // set day
+  num_to_str(local_time->tm_mday, day, 3);
+  strncpy(str + 4, day, 2);
+
+  str[6] = ' ';
+  // set time of day
+  // first get hour
+  num_to_str(local_time->tm_hour, time_of_day, 3); // only pass first two digits
+  // pass 3 index as first 3 are used for hour and `:`
+  num_to_str(local_time->tm_min, time_of_day + 3, 3);
+  if (time_of_day[0] == ' ') // if whitespace change to '0'
+  {
+    time_of_day[0] = '0';
+  }
+  if (time_of_day[3] == ' ')
+  {
+    time_of_day[3] = '0';
+  }
+  time_of_day[2] = ':';
+  strncpy(str + 7, time_of_day, 5); // add time of day to date str
+
+  return str;
+}
+
+char *num_to_str(time_t num, char *str, int size)
+{
+  if (num < 0)
+  {
+    fprintf(stderr, "num must be non-negative");
+    return NULL;
+  }
+  int num_digits = 0;
+  int curr_num = (int)num;
+  while (curr_num > 0)
+  {
+    curr_num /= 10;
+    num_digits++;
+  }
+  if (num_digits > size - 1) // less 1 so room for null terminator
+  {
+    fprintf(stderr, "size of str: %d is less than number of digits of num: %d, exiting\n", size,
+            num_digits);
+    return NULL;
+  }
+  str[size - 1] = '\0'; // add null-term to end of str
+  // add white space to each index by default
+  int i;
+  for (i = 0; i < size - 1; i++)
+  {
+    str[i] = ' ';
+  }
+
+  // convert digits to chars
+  short int curr_digit;
+  curr_num = num;
+  for (i = size - 2; i >= 0; i--) // from right side of str, get last digit and put in str
+  {
+    curr_digit = curr_num % 10;
+    curr_num /= 10;
+
+    curr_digit += 0x30; // add 0x30 to convert num to ASCII code of that digit
+    str[i] = (char)curr_digit;
+
+    if (curr_num < 1)
+    {
+      break;
+    }
+  }
+
+  return str;
+}

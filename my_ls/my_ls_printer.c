@@ -305,32 +305,46 @@ int print_path(FileList *file_list, unsigned int options)
 int print_long_listing(FileList *file_list, unsigned int options)
 {
   // print to long_listing
-  int flag_test = 0;               // this flag will test bits that affect long listing print only
+  int basic_long_list_flag =
+      FLAG_ALL | FLAG_LIST;        // this flag will test bits that affect long listing print only
   int blocksize = get_blocksize(); // gets blocksize depending on env var
   int file_size_digits = largest_num_digits_filesize(file_list);
   FileDetails *curr_file = NULL;
   // print sum of blocksize
   printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
 
-  char *perm_str = malloc(sizeof(char *) * 11); // allocate 11 bytes for permission string
+  char *perm_str = malloc(sizeof(char) * 11); // allocate 11 bytes for permission string
   if (!(perm_str))
   {
     fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
     return 1;
   }
+  char *time_str = malloc(sizeof(char) * 13);
+  if (!(time_str))
+  {
+    fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
+    return 1;
+  }
 
+  if (!(options & basic_long_list_flag))
+  {
+    // NEED TO DO deal with options
+  }
   for (size_t i = 0; i < file_list->file_count; i++)
   {
     curr_file = file_list->files[i];
-    printf("%s ", build_file_perm_string(perm_str, 11, curr_file->file_stats));
-    printf("%s %s", getpwuid(curr_file->file_stats->st_uid)->pw_name,
+    printf("%s", build_file_perm_string(perm_str, 11, curr_file->file_stats));
+    printf(" 1"); // TODO LINKS
+    printf(" %s %s", getpwuid(curr_file->file_stats->st_uid)->pw_name,
            getgrgid(curr_file->file_stats->st_gid)->gr_name);
 
     printf(" %*zu", file_size_digits, curr_file->file_stats->st_size);
 
-    printf("\n");
+    printf(" %s", epoch_to_human_readable_localtime(curr_file->file_stats->st_mtime, time_str, 13));
+    printf(" %s\n", curr_file->filename);
   }
 
   free(perm_str);
+  free(time_str);
   return 0;
 }
