@@ -8,8 +8,8 @@ OBJECTS = my_ls.o my_ls_helper.o my_ls_printer.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h my_ls_printer.h
 COMMON_TESTS = 
-MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac test_file_path_mac test_invalid_path_mac test_multile_path_with_incorrect_path_mac test_multiple_file_path_mac
-LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux
+MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac test_file_path_mac test_invalid_path_mac test_multile_path_with_incorrect_path_mac test_multiple_file_path_mac test_long_list_mac
+LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux test_long_list_linux test_hard_link_linux test_hard_link_2digits_linux
 MAC_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_mac 
 LINUX_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_linux
 
@@ -279,8 +279,14 @@ test_long_list_linux: my_ls
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@script -q -c "./my_ls -l ~/" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l ~/" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@echo "passed"
 
+# need to update to match linux tesdt
 test_long_list_mac: my_ls
 	@printf "test_long_list..."
 	@script -q  /tmp/my_ls.out ./my_ls -l > /dev/null
@@ -288,4 +294,36 @@ test_long_list_mac: my_ls
 	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+
+test_hard_link_linux: my_ls
+	@printf "test_hard_link_linux..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@touch /tmp/my_ls_test/original
+	@touch /tmp/my_ls_test/normal
+	@ln /tmp/my_ls_test/original /tmp/my_ls_test/hardlink
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_hard_link_2digits_linux: my_ls
+	@printf "test_hard_link_linux..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@touch /tmp/my_ls_test/original
+	@touch /tmp/my_ls_test/normal
+	@for i in $$(seq 1 11); do \
+		ln /tmp/my_ls_test/original /tmp/my_ls_test/hardlink_$$i; \
+	done
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
 	@echo "passed"

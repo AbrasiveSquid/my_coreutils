@@ -475,19 +475,14 @@ char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats)
 int largest_num_digits_filesize(const FileList *file_list)
 {
   int max_num_digits = 0;
-  int curr_num_digits;
   int curr_file_size;
+  int curr_num_digits = 0;
 
   for (size_t i = 0; i < file_list->file_count; i++)
   {
-    curr_num_digits = 0;
     curr_file_size = (int)file_list->files[i]->file_stats->st_size;
 
-    while (curr_file_size > 0)
-    {
-      curr_file_size /= 10;
-      curr_num_digits++;
-    }
+    curr_num_digits = num_digits(curr_file_size);
 
     if (curr_num_digits > max_num_digits)
     {
@@ -495,6 +490,39 @@ int largest_num_digits_filesize(const FileList *file_list)
     }
   }
   return max_num_digits;
+}
+
+int largest_num_digits_links(const FileList *file_list)
+{
+  int max_num_digits = 0;
+  int curr_file_size;
+  int curr_num_digits = 0;
+
+  for (size_t i = 0; i < file_list->file_count; i++)
+  {
+    curr_file_size = (int)file_list->files[i]->file_stats->st_nlink;
+
+    curr_num_digits = num_digits(curr_file_size);
+
+    if (curr_num_digits > max_num_digits)
+    {
+      max_num_digits = curr_num_digits;
+    }
+  }
+  return max_num_digits;
+}
+
+int num_digits(int num)
+{
+  int num_digits = 0;
+
+  while (num > 0)
+  {
+    num /= 10;
+    num_digits++;
+  }
+
+  return num_digits;
 }
 
 char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_len)

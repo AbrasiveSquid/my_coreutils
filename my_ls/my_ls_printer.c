@@ -309,6 +309,7 @@ int print_long_listing(FileList *file_list, unsigned int options)
       FLAG_ALL | FLAG_LIST;        // this flag will test bits that affect long listing print only
   int blocksize = get_blocksize(); // gets blocksize depending on env var
   int file_size_digits = largest_num_digits_filesize(file_list);
+  int link_num_digits = largest_num_digits_links(file_list);
   FileDetails *curr_file = NULL;
   // print sum of blocksize
   printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
@@ -326,6 +327,13 @@ int print_long_listing(FileList *file_list, unsigned int options)
     return 1;
   }
 
+  // char *link_str = malloc(sizeof(char) * (link_num_digits + 1));
+  // if (!(link_str))
+  // {
+  //   fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
+  //   return 1;
+  // }
+
   if (!(options & basic_long_list_flag))
   {
     // NEED TO DO deal with options
@@ -334,7 +342,7 @@ int print_long_listing(FileList *file_list, unsigned int options)
   {
     curr_file = file_list->files[i];
     printf("%s", build_file_perm_string(perm_str, 11, curr_file->file_stats));
-    printf(" 1"); // TODO LINKS
+    printf(" %*zu", link_num_digits, curr_file->file_stats->st_nlink);
     printf(" %s %s", getpwuid(curr_file->file_stats->st_uid)->pw_name,
            getgrgid(curr_file->file_stats->st_gid)->gr_name);
 

@@ -334,6 +334,31 @@ char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats);
 int largest_num_digits_filesize(const FileList *file_list);
 
 /*
+  Finds the most number of digits used in number of links and returns that as an int. Used for
+  printf specifier formatting
+
+  Parameters:
+    file_list: FileList *
+      pointer to a list of files that each have a file_stats->st_nlink field
+
+  Returns:
+    positive int
+*/
+int largest_num_digits_links(const FileList *file_list);
+
+/*
+  Returns the number of digits in num
+
+  Parameters:
+    num: int
+
+  Returns:
+    int:
+      equal to number of digits, example: 300 returns 3
+*/
+int num_digits(int num);
+
+/*
   Builds a string representation of a human readable data in local time from epoch time
 
   Parameters:
