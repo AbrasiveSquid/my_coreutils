@@ -471,3 +471,28 @@ char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats)
 
   return c_ptr;
 }
+
+int largest_num_digits_filesize(const FileList *file_list)
+{
+  int max_num_digits = 0;
+  int curr_num_digits;
+  int curr_file_size;
+
+  for (size_t i = 0; i < file_list->file_count; i++)
+  {
+    curr_num_digits = 0;
+    curr_file_size = (int)file_list->files[i]->file_stats->st_size;
+
+    while (curr_file_size > 0)
+    {
+      curr_file_size /= 10;
+      curr_num_digits++;
+    }
+
+    if (curr_num_digits > max_num_digits)
+    {
+      max_num_digits = curr_num_digits;
+    }
+  }
+  return max_num_digits;
+}

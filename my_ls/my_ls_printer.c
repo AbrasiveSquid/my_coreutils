@@ -307,6 +307,7 @@ int print_long_listing(FileList *file_list, unsigned int options)
   // print to long_listing
   int flag_test = 0;               // this flag will test bits that affect long listing print only
   int blocksize = get_blocksize(); // gets blocksize depending on env var
+  int file_size_digits = largest_num_digits_filesize(file_list);
   FileDetails *curr_file = NULL;
   // print sum of blocksize
   printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
@@ -322,6 +323,10 @@ int print_long_listing(FileList *file_list, unsigned int options)
   {
     curr_file = file_list->files[i];
     printf("%s ", build_file_perm_string(perm_str, 11, curr_file->file_stats));
+    printf("%s %s", getpwuid(curr_file->file_stats->st_uid)->pw_name,
+           getgrgid(curr_file->file_stats->st_gid)->gr_name);
+
+    printf(" %*zu", file_size_digits, curr_file->file_stats->st_size);
 
     printf("\n");
   }
