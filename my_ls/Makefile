@@ -327,3 +327,18 @@ test_hard_link_2digits_linux: my_ls
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@rm -rf /tmp/my_ls_test
 	@echo "passed"
+
+test_combined_la_linux: my_ls
+	@printf "test_combined_la..."
+	@script -q -c "./my_ls -la" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -la" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@script -q -c "./my_ls -la ~/" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -al ~/" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+

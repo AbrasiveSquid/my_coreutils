@@ -328,7 +328,7 @@ int parse_options(char *flag, unsigned int *options)
   int i = 1;
   while (flag[i] != '\0') // loop until null char
   {
-    switch (flag[1])
+    switch (flag[i])
     {
     case 'a':
       *options |= FLAG_ALL;
@@ -337,7 +337,7 @@ int parse_options(char *flag, unsigned int *options)
       *options |= FLAG_LIST;
       break;
     default:
-      return flag[1];
+      return flag[i];
     }
     i++;
   }
