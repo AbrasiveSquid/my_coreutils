@@ -20,14 +20,14 @@ how these programs interface with the OS.
 ## Highlights
 - Written in C99 using POSIX/Unix APIs
 - Behaviour tested against the system GNU utilities (with diff)
-- Built with AddressSanitizer and UndefiedHeaviorSanitizer
+- Built with AddressSanitizer and UndefiedBehaviorSanitizer
 - Dynamic memory allocation and filesystem APIs
 - Terminal detection and terminal-width-aware output
 - Locale-aware filename sorting
 
 [`my_cat`](my_cat) implements the GNU `cat` options (flags), including stdin handling, multiple files, how options interact with each other, and non-printing characters.
 
-[`my_ls`](my_ls) currently reproduces the default no-option behaviour (no flags), including TTY detection, redirected
+[`my_ls`](my_ls) currently reproduces the default no-option behaviour as well as `-a` and `-l` including TTY detection, redirected
 output, dynamic column layout, and testing across various terminal widths against GNU `ls` behaviour.
 
 Each utility's subdirectory for implementation details, build instructions, and tests.
