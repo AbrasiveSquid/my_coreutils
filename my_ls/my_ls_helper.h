@@ -8,11 +8,14 @@
 #include <locale.h>
 #include <pwd.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -349,6 +352,19 @@ int largest_num_digits_filesize(const FileList *file_list);
 int largest_num_digits_links(const FileList *file_list);
 
 /*
+  Finds the most number of digits used for major and minor devices and returns the total number of
+  characters needed for printf formatting
+
+  Parameters:
+    file_list: FileList *
+      pointer to a list of files that each have a file_stats->st_rdev field
+
+  Returns:
+    positive int
+*/
+int char_width_devices(const FileList *file_list);
+
+/*
   Returns the number of digits in num
 
   Parameters:
@@ -382,7 +398,7 @@ char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_le
   Converts a number to a string, if number is negative, returns NULL
 
   Parameters:
-    num: time_t
+    num: uintmax_t
       number to convert, must be non-negative integer
 
     str: char *
@@ -394,6 +410,47 @@ char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_le
   Returns:
     char *, that is the integer number converted to a string
 */
-char *num_to_str(time_t num, char *str, int size);
+char *num_to_str(uintmax_t num, char *str, int size);
+
+/*
+  Builds a string of filesize or device depending on the file type. Character device returns device
+  details, otherwise returns filesize
+
+  Parameters:
+    str: char *
+      char array to hold the string
+
+    n: int
+      number of bytes allocated for str
+
+    file_stats: const struct stat *
+      pointer to the file stats for a file
+
+    options: unsigned int
+      bit mask that has boolean options that affect formatting
+*/
+char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats, unsigned int options);
+
+/*
+  Determines the max number of characters for the owners in a file list for print formatting
+
+  Parameters:
+    file_list: const FileList *
+
+  Returns:
+    int, positive value of number of characters in a owner name, -1 for error
+*/
+int find_max_uname_len(const FileList *file_list);
+
+/*
+  Determines the max number of characters for the group owners in a file list for print formatting
+
+  Parameters:
+    file_list: const FileList *
+
+  Returns:
+    int, positive value of number of characters in a group name, -1 for error
+*/
+int find_max_gname_len(const FileList *file_list);
 
 #endif

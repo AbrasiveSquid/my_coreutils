@@ -176,10 +176,7 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
     }
     // add file to file_list
     file_list->files[file_list->file_count++] = curr_file;
-    if (S_ISREG(curr_file->file_stats->st_mode))
-    {
-      file_list->blocksize_sum += curr_file->file_stats->st_blocks; // sum of blocksize
-    }
+    file_list->blocksize_sum += curr_file->file_stats->st_blocks; // sum of blocksize
   }
   closedir(dp);
 
@@ -197,7 +194,7 @@ FileList *create_file_list_files(char **filenames, size_t size, bool hidden_file
 
   // initialize file_list then allocate memory for files
   file_list->files = NULL;
-  file_list->direcory_listing = true;
+  file_list->direcory_listing = false;
   file_list->file_capacity = size; // capacity to size
   file_list->file_count = 0;
   file_list->blocksize_sum = 0; // init value but not used for files by themselves
@@ -383,17 +380,7 @@ int parse_paths(char *path, PathNames *path_names)
   }
 
   // check if path is a file or directory and add to correct array in pathnames
-  if (S_ISREG(buf.st_mode))
-  {
-    if (path_names->file_capacity <= path_names->file_count)
-    { // double capacity and allocate memory
-      path_names->file_capacity *= 2;
-      path_names->file_names = alloc_array(path_names->file_names, path_names->file_capacity,
-                                           sizeof(*(path_names->file_names)));
-    }
-    path_names->file_names[(path_names->file_count++)] = path;
-  }
-  else if (S_ISDIR(buf.st_mode))
+  if (S_ISDIR(buf.st_mode))
   {
 
     if (path_names->dir_capacity <= path_names->dir_count)
@@ -406,11 +393,15 @@ int parse_paths(char *path, PathNames *path_names)
   }
   else
   {
-    fprintf(stderr, "./my_ls: cannot access '%s': No such file or directory\n", path);
-    return 1;
+    if (path_names->file_capacity <= path_names->file_count)
+    { // double capacity and allocate memory
+      path_names->file_capacity *= 2;
+      path_names->file_names = alloc_array(path_names->file_names, path_names->file_capacity,
+                                           sizeof(*(path_names->file_names)));
+    }
+    path_names->file_names[(path_names->file_count++)] = path;
   }
 
-  // add new path to path_names and increment count
   return 0;
 }
 
@@ -568,10 +559,38 @@ int largest_num_digits_links(const FileList *file_list)
   return max_num_digits;
 }
 
+int char_width_devices(const FileList *file_list)
+{
+  int max_major_digits = 0;
+  int max_minor_digits = 0;
+  int curr_major_digits;
+  int curr_minor_digits;
+
+  for (size_t i = 0; i < file_list->file_count; i++)
+  {
+    curr_major_digits = num_digits((int)major(file_list->files[i]->file_stats->st_rdev));
+    curr_minor_digits = num_digits((int)minor(file_list->files[i]->file_stats->st_rdev));
+    if (curr_major_digits > max_major_digits)
+    {
+      max_major_digits = curr_major_digits;
+    }
+    if (curr_minor_digits > max_minor_digits)
+    {
+      max_minor_digits = curr_minor_digits;
+    }
+  }
+
+  return max_minor_digits + max_major_digits + 3; // add 3 for ", " and null byte
+}
+
 int num_digits(int num)
 {
   int num_digits = 0;
 
+  if (num == 0)
+  {
+    return 1;
+  }
   while (num > 0)
   {
     num /= 10;
@@ -585,7 +604,7 @@ char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_le
 {
   struct tm *local_time;
   char day[3];         // holds the day in localtime as as string
-  char time_of_day[6]; // holds the time of day 24 hour clock
+  char time_of_day[3]; // holds the time of day 24 hour clock
 
   if (str_len < 13)
   {
@@ -593,7 +612,6 @@ char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_le
                     "insufficient, exiting\n");
     return NULL;
   }
-  str[12] = '\0'; // set null byte at end of string
 
   local_time = localtime(&epoch_time);
 
@@ -643,64 +661,72 @@ char *epoch_to_human_readable_localtime(time_t epoch_time, char *str, int str_le
     break;
   }
 
-  str[3] = ' ';
-
+  strcat(str, " "); // add space between month and day
   // set day
   num_to_str(local_time->tm_mday, day, 3);
-  strncpy(str + 4, day, 2);
-
-  str[6] = ' ';
-  // set time of day
-  // first get hour
-  num_to_str(local_time->tm_hour, time_of_day, 3); // only pass first two digits
-  // pass 3 index as first 3 are used for hour and `:`
-  num_to_str(local_time->tm_min, time_of_day + 3, 3);
-  if (time_of_day[0] == ' ') // if whitespace change to '0'
+  if (strlen(day) == 1)
   {
+    day[1] = day[0];
+    day[0] = ' ';
+  }
+  strncat(str, day, 2);
+  strcat(str, " "); // add space between day and time
+
+  const unsigned int six_months_seconds = 15778476;
+  if (epoch_time < time(NULL) - six_months_seconds || epoch_time > time(NULL))
+  {
+    // if time is too old or in the future, print year instead of time
+    char year[6];
+    year[0] = ' ';                                       // index 0 is whitespace
+    num_to_str(local_time->tm_year + 1900, year + 1, 5); // copy from index 1
+    strncat(str, year, 6);
+    return str;
+  }
+
+  // if recent file put time of day
+  // set time of day
+  // set hour
+  num_to_str(local_time->tm_hour, time_of_day, 3); // only pass first two digits
+  if (strlen(time_of_day) == 1)
+  {
+    time_of_day[1] = time_of_day[0];
     time_of_day[0] = '0';
   }
-  if (time_of_day[3] == ' ')
+  strncat(str, time_of_day, 2);
+  strcat(str, ":");
+
+  // set minutes
+  num_to_str(local_time->tm_min, time_of_day, 3);
+  if (strlen(time_of_day) == 1)
   {
-    time_of_day[3] = '0';
+    time_of_day[1] = time_of_day[0];
+    time_of_day[0] = '0';
   }
-  time_of_day[2] = ':';
-  strncpy(str + 7, time_of_day, 5); // add time of day to date str
+  strncat(str, time_of_day, 2);
 
   return str;
 }
 
-char *num_to_str(time_t num, char *str, int size)
+char *num_to_str(uintmax_t num, char *str, int size)
 {
-  if (num < 0)
-  {
-    fprintf(stderr, "num must be non-negative");
-    return NULL;
-  }
-  int num_digits = 0;
-  int curr_num = (int)num;
-  while (curr_num > 0)
-  {
-    curr_num /= 10;
-    num_digits++;
-  }
-  if (num_digits > size - 1) // less 1 so room for null terminator
+  int num_len = num_digits((int)num);
+
+  if (num_len > size - 1) // less 1 so room for null terminator
   {
     fprintf(stderr, "size of str: %d is less than number of digits of num: %d, exiting\n", size,
-            num_digits);
+            num_len);
     return NULL;
   }
-  str[size - 1] = '\0'; // add null-term to end of str
-  // add white space to each index by default
-  int i;
-  for (i = 0; i < size - 1; i++)
+  if (num == 0)
   {
-    str[i] = ' ';
+    strcpy(str, "0");
+    return str;
   }
 
   // convert digits to chars
   short int curr_digit;
-  curr_num = num;
-  for (i = size - 2; i >= 0; i--) // from right side of str, get last digit and put in str
+  unsigned int curr_num = num;
+  for (int i = num_len - 1; i >= 0; i--) // from right side of str, get last digit and put in str
   {
     curr_digit = curr_num % 10;
     curr_num /= 10;
@@ -713,6 +739,71 @@ char *num_to_str(time_t num, char *str, int size)
       break;
     }
   }
+  str[num_len] = '\0';
 
   return str;
+}
+
+char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats, unsigned int options)
+{
+  if (S_ISCHR(file_stats->st_mode) || S_ISBLK(file_stats->st_mode))
+  {
+    unsigned int maj = major(file_stats->st_rdev);
+    unsigned int min = minor(file_stats->st_rdev);
+    int num_digits_maj = num_digits(maj);
+    int num_digits_min = num_digits(min);
+
+    int str_len = num_digits_maj + num_digits_min + 3; // 3 for , 3 and nullbyte
+    if (n < str_len)
+    {
+      fprintf(stderr, "Insufficient memory allocated for str, exiting;");
+      return NULL;
+    }
+
+    num_to_str((uintmax_t)maj, str, num_digits_maj + 1); // + 1 for null byte
+    strcat(str, ", ");
+
+    char minor_str[num_digits_min + 1];
+    strncat(str, num_to_str((uintmax_t)min, minor_str, num_digits_min + 1), num_digits_min);
+
+    return str;
+  }
+
+  // all other files are treated the same depending on set options
+
+  // no option set
+  num_to_str((uintmax_t)file_stats->st_size, str, n);
+  return str;
+}
+
+int find_max_uname_len(const FileList *file_list)
+{
+  int max_len = -1;
+  int curr_len;
+
+  for (size_t i = 0; i < file_list->file_count; i++)
+  {
+    curr_len = strlen(getpwuid(file_list->files[i]->file_stats->st_uid)->pw_name);
+    if (curr_len > max_len)
+    {
+      max_len = curr_len;
+    }
+  }
+  return max_len;
+}
+
+int find_max_gname_len(const FileList *file_list)
+{
+  int max_len = -1;
+  int curr_len;
+
+  for (size_t i = 0; i < file_list->file_count; i++)
+  {
+    curr_len = strlen(getgrgid(file_list->files[i]->file_stats->st_gid)->gr_name);
+    if (curr_len > max_len)
+    {
+      max_len = curr_len;
+    }
+  }
+  return max_len;
 }

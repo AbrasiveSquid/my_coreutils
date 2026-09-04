@@ -28,13 +28,20 @@ typedef struct
     dir_file: bool
       flag to determine if arr contains files or directories
 
+    files_printed: bool
+      flag to determine if other files were printed so directory path is included
+
+    width_source: const FileList *
+      struct of the column widths
+
   Returns:
     int: 0 for success, 1 for error
 
   Postcondition:
     Calls other method that will print the items in the arr to the stdout
 */
-int print_items(char **arr, size_t size, unsigned int options, bool dir_file);
+int print_items(char **arr, size_t size, unsigned int options, bool dir_file, bool files_printed,
+                const FileList *width_source);
 
 /*
   Prints the list of file names in a single column
@@ -147,13 +154,16 @@ PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
     options: int *
       pointer to a bitmask that contains the options for formatted output
 
+    width_source: const FileList *
+      struct of the column widths
+
   Returns:
     int: 0 for success, 1 for error
 
   Postcondition:
     prints the strings of filenames in file_list to stdout in the long listing format
 */
-int print_long_listing(FileList *file_list, unsigned int options);
+int print_long_listing(FileList *file_list, unsigned int options, const FileList *width_source);
 
 /*
   Prints the pathname to the fp. Used when multiple paths are listed as arguments

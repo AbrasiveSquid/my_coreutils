@@ -9,7 +9,7 @@ DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h my_ls_printer.h
 COMMON_TESTS = 
 MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac test_file_path_mac test_invalid_path_mac test_multile_path_with_incorrect_path_mac test_multiple_file_path_mac test_long_list_mac
-LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux test_long_list_linux test_hard_link_linux test_hard_link_2digits_linux test_regular_file_linux test_directory_type_linux test_symbolic_link_linux test_fifo_linux test_socket_linux test_character_device_linux test_block_device_linux test_combined_la_linux 
+LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux test_long_list_linux test_hard_link_linux test_hard_link_2digits_linux test_regular_file_linux test_directory_type_linux test_symbolic_link_linux test_fifo_linux test_socket_linux test_character_device_linux test_block_device_linux test_combined_la_linux test_timestamp_cases_linux test_broken_symlink_linux test_mixed_size_device_linux test_zero_values_linux test_empty_directory_linux test_long_multiple_operands_linux
 MAC_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_mac 
 LINUX_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_linux
 
@@ -431,3 +431,89 @@ test_combined_la_linux: my_ls
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@echo "passed"
 
+test_timestamp_cases_linux: my_ls
+	@printf "test_timestamp_cases..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@touch /tmp/my_ls_test/recent
+	@touch -d '7 months ago' /tmp/my_ls_test/old
+	@touch -d 'tomorrow' /tmp/my_ls_test/future
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_broken_symlink_linux: my_ls
+	@printf "test_broken_symlink..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@ln -s does_not_exist /tmp/my_ls_test/broken
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_mixed_size_device_linux: my_ls
+	@printf "test_mixed_size_device..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@truncate -s 123456 /tmp/my_ls_test/regular
+	@touch /tmp/my_ls_test/zero
+	@script -q -c "./my_ls -l /dev/null /tmp/my_ls_test/regular /tmp/my_ls_test/zero" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /dev/null /tmp/my_ls_test/regular /tmp/my_ls_test/zero" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_zero_values_linux: my_ls
+	@printf "test_zero_values..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@touch /tmp/my_ls_test/zero
+	@touch -d 'yesterday 18:00:00' /tmp/my_ls_test/zero
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_empty_directory_linux: my_ls
+	@printf "test_empty_directory..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test/empty
+	@script -q -c "./my_ls -l /tmp/my_ls_test/empty" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test/empty" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@script -q -c "./my_ls -la /tmp/my_ls_test/empty" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -la /tmp/my_ls_test/empty" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_long_multiple_operands_linux: my_ls
+	@printf "test_long_multiple_operands..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test/directory
+	@touch /tmp/my_ls_test/file
+	@touch /tmp/my_ls_test/directory/inside
+	@script -q -c "./my_ls -l /tmp/my_ls_test/file /tmp/my_ls_test/missing /tmp/my_ls_test/directory" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test/file /tmp/my_ls_test/missing /tmp/my_ls_test/directory" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s#^\./my_ls:#ls:#; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"

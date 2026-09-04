@@ -1,7 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 #include "my_ls_printer.h"
 
-int print_items(char **arr, size_t size, unsigned int options, bool dir_file)
+int print_items(char **arr, size_t size, unsigned int options, bool dir_file, bool files_printed,
+                const FileList *width_source)
 {
   FileList *file_list = NULL;
   int return_code = 0;
@@ -9,8 +10,8 @@ int print_items(char **arr, size_t size, unsigned int options, bool dir_file)
 
   for (size_t i = 0; i < size; i++)
   {
-    // if multiple directories, prints directory above filelist
-    if (dir_file && size > 1)
+    // if multiple directories, prints directory above filelist or files were printed
+    if (dir_file && size > 1 || files_printed)
     {
       if (i > 0)
       {
@@ -52,7 +53,7 @@ int print_items(char **arr, size_t size, unsigned int options, bool dir_file)
     }
     else if (options & FLAG_LIST)
     {
-      if (print_long_listing(file_list, options))
+      if (print_long_listing(file_list, options, width_source))
       {
         return_code = 1;
       }
@@ -302,33 +303,36 @@ int print_path(FileList *file_list, unsigned int options)
   return return_code;
 }
 
-int print_long_listing(FileList *file_list, unsigned int options)
+int print_long_listing(FileList *file_list, unsigned int options, const FileList *width_source)
 {
-  // print to long_listing
-  int basic_long_list_flag =
-      FLAG_ALL | FLAG_LIST;        // this flag will test bits that affect long listing print only
+  // this flag will test bits that affect long listing print only
+  int basic_long_list_flag = FLAG_ALL | FLAG_LIST;
   int blocksize = get_blocksize(); // gets blocksize depending on env var
-  int file_size_digits = largest_num_digits_filesize(file_list);
-  int link_num_digits = largest_num_digits_links(file_list);
+
+  if ((!width_source))
+  {
+    width_source = file_list;
+  }
+
+  int file_size_digits = largest_num_digits_filesize(width_source);
+  int device_size_digits = char_width_devices(width_source);
+  int link_num_digits = largest_num_digits_links(width_source);
+  int max_uname_len = find_max_uname_len(width_source);
+  int max_gname_len = find_max_gname_len(width_source);
+
   FileDetails *curr_file = NULL;
+
   // print sum of blocksize
   if (file_list->direcory_listing)
   {
     printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
   }
 
-  char *perm_str = malloc(sizeof(char) * 11); // allocate 11 bytes for permission string
-  if (!(perm_str))
-  {
-    fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
-    return 1;
-  }
-  char *time_str = malloc(sizeof(char) * 13);
-  if (!(time_str))
-  {
-    fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
-    return 1;
-  }
+  char perm_str[11];
+  char time_str[13];
+  int size_str_len = MAX(file_size_digits + 1,
+                         device_size_digits); // min bytes needed for size_str for character device
+  char size_str[size_str_len];
 
   if (!(options & basic_long_list_flag))
   {
@@ -339,10 +343,11 @@ int print_long_listing(FileList *file_list, unsigned int options)
     curr_file = file_list->files[i];
     printf("%s", build_file_perm_string(perm_str, 11, curr_file->file_stats));
     printf(" %*zu", link_num_digits, curr_file->file_stats->st_nlink);
-    printf(" %s %s", getpwuid(curr_file->file_stats->st_uid)->pw_name,
-           getgrgid(curr_file->file_stats->st_gid)->gr_name);
+    printf(" %-*s %-*s", max_uname_len, getpwuid(curr_file->file_stats->st_uid)->pw_name,
+           max_gname_len, getgrgid(curr_file->file_stats->st_gid)->gr_name);
 
-    printf(" %*zu", file_size_digits, curr_file->file_stats->st_size);
+    printf(" %*s", file_size_digits,
+           get_size_or_dev_str(size_str, size_str_len, curr_file->file_stats, options));
 
     printf(" %s", epoch_to_human_readable_localtime(curr_file->file_stats->st_mtime, time_str, 13));
 
@@ -367,12 +372,13 @@ int print_long_listing(FileList *file_list, unsigned int options)
       if (link_code < 0)
       {
         perror(curr_file->filename);
-        free(perm_str);
-        free(time_str);
         return 1;
       }
 
-      printf(" %s -> %s\n", curr_file->filename, buf);
+      char link_str[link_code + 1];
+      strncpy(link_str, buf, link_code);
+      link_str[link_code] = '\0';
+      printf(" %s -> %s\n", curr_file->filename, link_str);
     }
     else
     {
@@ -380,7 +386,5 @@ int print_long_listing(FileList *file_list, unsigned int options)
     }
   }
 
-  free(perm_str);
-  free(time_str);
   return 0;
 }

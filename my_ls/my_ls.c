@@ -63,65 +63,52 @@ int main(int argc, char *argv[])
   // sorts all files and directories by LOCALE
   sort_pathnames(&path_names);
 
+  // calculate width
+  FileList *operand_width_source = NULL;
+  if ((options & FLAG_LIST) && path_names.file_count > 0 && path_names.dir_count > 0)
+  {
+    size_t operand_count = path_names.file_count + path_names.dir_count;
+    char *operands[operand_count];
+
+    size_t index = 0;
+
+    for (size_t i = 0; i < path_names.file_count; i++)
+    {
+      operands[index++] = path_names.file_names[i];
+    }
+
+    for (size_t i = 0; i < path_names.dir_count; i++)
+    {
+      operands[index++] = path_names.dir_names[i];
+    }
+    operand_width_source = create_file_list_files(operands, operand_count, true);
+  }
+
   // first print all files, then print directories
   if (path_names.file_count > 0)
   {
-    int print_code = print_items(path_names.file_names, path_names.file_count, options, false);
+    int print_code = print_items(path_names.file_names, path_names.file_count, options, false, 0,
+                                 operand_width_source);
     if (!(return_code))
     {
       return_code = print_code;
     }
+    if (path_names.dir_count)
+    {
+      printf("\n");
+    }
   }
   if (path_names.dir_count > 0)
   {
-    int print_code = print_items(path_names.dir_names, path_names.dir_count, options, true);
+    int print_code = print_items(path_names.dir_names, path_names.dir_count, options, true,
+                                 path_names.file_count, NULL);
     if (!(return_code))
     {
       return_code = print_code;
     }
   }
 
-  // for (size_t i = 0; i < path_names.count; i++)
-  // {
-  //   if (path_names.count > 1)
-  //   {
-  //     if (i > 0)
-  //     {
-  //       printf("\n");
-  //     }
-  //     // if multiple paths, print pathname at top
-  //     printf("%s:\n", path_names.pathnames[i]);
-  //   }
-  //
-  //   free_file_list(file_list);
-  //   file_list = NULL;
-  //
-  //   file_list = create_file_list(path_names.pathnames[i], options & FLAG_ALL);
-  //   if (!(file_list))
-  //   {
-  //     cleanup(file_list, &path_names);
-  //     return_code = 1;
-  //     return return_code; // file_list could not be created so program exits
-  //   }
-  //   // sort files by LOCALE
-  //   qsort(file_list->files, file_list->file_count, sizeof(file_list->files[0]),
-  //   compare_filenames);
-  //
-  //   // check if any flag set
-  //   if (!(options) || (options == FLAG_ALL))
-  //   {
-  //     // basic print is no option set or only all is set
-  //     if (basic_print(file_list)) // non-zero return means error
-  //     {
-  //       return_code = 1;
-  //     }
-  //   }
-  //   else
-  //   {
-  //     if (print_path(file_list, &options))
-  //       return_code = 1;
-  //   }
-  // }
+  free_file_list(operand_width_source);
   cleanup(&path_names);
   return return_code;
 }
