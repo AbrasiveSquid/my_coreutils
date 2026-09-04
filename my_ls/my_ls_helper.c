@@ -69,6 +69,7 @@ void free_file_list(FileList *file_list)
       free(file_list->files[i]);
     }
     free(file_list->files);
+    free(file_list->dirpath);
   }
   free(file_list);
 }
@@ -120,11 +121,25 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
 
   // initialize file_list then allocate memory for files
   file_list->files = NULL;
+  file_list->direcory_listing = true;
   file_list->file_capacity = 4; // set inital capacity for 4
   file_list->file_count = 0;
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
   file_list->blocksize_sum = 0;
+
+  // save full path to directory that contains these files
+  file_list->dirpath = malloc(sizeof(char) * (strlen(pathname)) + 2); // for null and '/'
+  if (!(file_list->dirpath))
+  {
+    fprintf(stderr, "Error allocating memory in create_file_list, exiting.\n");
+    free_file_list(file_list);
+    closedir(dp);
+    return NULL;
+  }
+  strcpy(file_list->dirpath, pathname);
+  strcat(file_list->dirpath, "/");
+
   // read all files in pathname and all to files array
   while ((dirp = readdir(dp)) != NULL)
   {
@@ -149,6 +164,7 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
     {
       strcat(fullpath, "/");
     }
+
     strncat(fullpath, (*dirp).d_name, strlen((*dirp).d_name));
     curr_file = create_file_details(fullpath, (*dirp).d_name);
     if (!(curr_file))
@@ -181,11 +197,22 @@ FileList *create_file_list_files(char **filenames, size_t size, bool hidden_file
 
   // initialize file_list then allocate memory for files
   file_list->files = NULL;
+  file_list->direcory_listing = true;
   file_list->file_capacity = size; // capacity to size
   file_list->file_count = 0;
   file_list->blocksize_sum = 0; // init value but not used for files by themselves
   file_list->files =
       alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
+
+  // since these files have full paths, have empty try
+  file_list->dirpath = malloc(sizeof(char) * 1);
+  if (!(file_list->dirpath))
+  {
+    fprintf(stderr, "Error allocating memory in create_file_list, exiting.\n");
+    free_file_list(file_list);
+    return NULL;
+  }
+  strcpy(file_list->dirpath, "");
 
   // loop through filenames and create file_details and add to file_list
   FileDetails *curr_file = NULL;
@@ -424,9 +451,38 @@ char *build_file_perm_string(char *c_ptr, int size, struct stat *file_stats)
   c_ptr[size - 1] = '\0'; // set nullbyte
 
   // set file bit
-  if (S_ISDIR(file_stats->st_mode))
+  if (S_ISREG(file_stats->st_mode))
+  {
+    c_ptr[0] = '-';
+  }
+  else if (S_ISDIR(file_stats->st_mode))
   {
     c_ptr[0] = 'd';
+  }
+  else if (S_ISCHR(file_stats->st_mode))
+  {
+    c_ptr[0] = 'c';
+  }
+  else if (S_ISBLK(file_stats->st_mode))
+  {
+    c_ptr[0] = 'b';
+  }
+  else if (S_ISFIFO(file_stats->st_mode))
+  {
+    c_ptr[0] = 'p';
+  }
+  else if (S_ISLNK(file_stats->st_mode))
+  {
+    c_ptr[0] = 'l';
+  }
+  else if (S_ISSOCK(file_stats->st_mode))
+  {
+    c_ptr[0] = 's';
+  }
+  else
+  {
+    fprintf(stderr, "Invalid file type, exiting\n");
+    return NULL;
   }
 
   // set userbits

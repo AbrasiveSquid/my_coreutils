@@ -1,5 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
 #include "my_ls_printer.h"
-#include "my_ls_helper.h"
 
 int print_items(char **arr, size_t size, unsigned int options, bool dir_file)
 {
@@ -312,7 +312,10 @@ int print_long_listing(FileList *file_list, unsigned int options)
   int link_num_digits = largest_num_digits_links(file_list);
   FileDetails *curr_file = NULL;
   // print sum of blocksize
-  printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
+  if (file_list->direcory_listing)
+  {
+    printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
+  }
 
   char *perm_str = malloc(sizeof(char) * 11); // allocate 11 bytes for permission string
   if (!(perm_str))
@@ -326,13 +329,6 @@ int print_long_listing(FileList *file_list, unsigned int options)
     fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
     return 1;
   }
-
-  // char *link_str = malloc(sizeof(char) * (link_num_digits + 1));
-  // if (!(link_str))
-  // {
-  //   fprintf(stderr, "Error allocating memory in print_long_listing, exiting\n");
-  //   return 1;
-  // }
 
   if (!(options & basic_long_list_flag))
   {
@@ -349,7 +345,39 @@ int print_long_listing(FileList *file_list, unsigned int options)
     printf(" %*zu", file_size_digits, curr_file->file_stats->st_size);
 
     printf(" %s", epoch_to_human_readable_localtime(curr_file->file_stats->st_mtime, time_str, 13));
-    printf(" %s\n", curr_file->filename);
+
+    if (S_ISLNK(curr_file->file_stats->st_mode))
+    {
+      int buf_size = curr_file->file_stats->st_size + 1; // size of bytes for symlink name
+      char buf[buf_size];
+      ssize_t link_code;
+      if (!file_list->dirpath) // empty string, means no path to append
+      {
+        link_code = readlink(curr_file->filename, buf, buf_size);
+      }
+      else
+      {
+        int str_len = strlen(file_list->dirpath) + strlen(curr_file->filename);
+        char fullpath[str_len + 1];
+        strncpy(fullpath, file_list->dirpath, strlen(file_list->dirpath) + 1);
+        strncat(fullpath, curr_file->filename, strlen(curr_file->filename));
+        link_code = readlink(fullpath, buf, buf_size);
+      }
+
+      if (link_code < 0)
+      {
+        perror(curr_file->filename);
+        free(perm_str);
+        free(time_str);
+        return 1;
+      }
+
+      printf(" %s -> %s\n", curr_file->filename, buf);
+    }
+    else
+    {
+      printf(" %s\n", curr_file->filename);
+    }
   }
 
   free(perm_str);

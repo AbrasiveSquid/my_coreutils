@@ -9,7 +9,7 @@ DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h my_ls_printer.h
 COMMON_TESTS = 
 MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac test_file_path_mac test_invalid_path_mac test_multile_path_with_incorrect_path_mac test_multiple_file_path_mac test_long_list_mac
-LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux test_long_list_linux test_hard_link_linux test_hard_link_2digits_linux
+LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux test_long_list_linux test_hard_link_linux test_hard_link_2digits_linux test_regular_file_linux test_directory_type_linux test_symbolic_link_linux test_fifo_linux test_socket_linux test_character_device_linux test_block_device_linux test_combined_la_linux 
 MAC_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_mac 
 LINUX_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_linux
 
@@ -297,7 +297,7 @@ test_long_list_mac: my_ls
 	@echo "passed"
 
 test_hard_link_linux: my_ls
-	@printf "test_hard_link_linux..."
+	@printf "test_hard_link..."
 	@rm -rf /tmp/my_ls_test
 	@mkdir -p /tmp/my_ls_test
 	@touch /tmp/my_ls_test/original
@@ -312,7 +312,7 @@ test_hard_link_linux: my_ls
 	@echo "passed"
 
 test_hard_link_2digits_linux: my_ls
-	@printf "test_hard_link_linux..."
+	@printf "test_hard_link..."
 	@rm -rf /tmp/my_ls_test
 	@mkdir -p /tmp/my_ls_test
 	@touch /tmp/my_ls_test/original
@@ -327,6 +327,95 @@ test_hard_link_2digits_linux: my_ls
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@rm -rf /tmp/my_ls_test
 	@echo "passed"
+
+test_regular_file_linux: my_ls
+	@printf "test_regular_file_linux..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@touch /tmp/my_ls_test/regular
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_directory_type_linux: my_ls
+	@printf "test_directory_type..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test/directory
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_symbolic_link_linux: my_ls
+	@printf "test_symbolic_link..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@touch /tmp/my_ls_test/regular
+	@ln -s regular /tmp/my_ls_test/symlink
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+
+test_fifo_linux: my_ls
+	@printf "test_fifo..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@mkfifo /tmp/my_ls_test/fifo
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_socket_linux: my_ls
+	@printf "test_socket..."
+	@rm -rf /tmp/my_ls_test
+	@mkdir -p /tmp/my_ls_test
+	@python3 -c 'import socket; s = socket.socket(socket.AF_UNIX); s.bind("/tmp/my_ls_test/socket"); s.close()'
+	@script -q -c "./my_ls -l /tmp/my_ls_test" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /tmp/my_ls_test" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_character_device_linux: my_ls
+	@printf "test_character_device..."
+	@script -q -c "./my_ls -l /dev/null" /tmp/my_ls.out > /dev/null
+	@script -q -c "ls -l /dev/null" /tmp/ls.out > /dev/null
+	@expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm
+	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
+	@diff -u /tmp/my_ls.norm /tmp/ls.norm
+	@echo "passed"
+
+test_block_device_linux: my_ls
+	@printf "test_block_device..."
+	@block="$$(find /dev -type b -print -quit 2>/dev/null)"; \
+	if [ -z "$$block" ]; then \
+		echo "skipped (no block device found)"; \
+	else \
+		script -q -c "./my_ls -l $$block" /tmp/my_ls.out > /dev/null; \
+		script -q -c "ls -l $$block" /tmp/ls.out > /dev/null; \
+		expand -t 8 /tmp/my_ls.out | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/my_ls.norm; \
+		expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm; \
+		diff -u /tmp/my_ls.norm /tmp/ls.norm; \
+		echo "passed"; \
+	fi
 
 test_combined_la_linux: my_ls
 	@printf "test_combined_la..."

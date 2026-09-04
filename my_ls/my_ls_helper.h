@@ -41,10 +41,12 @@ typedef struct
 // contains details of files to be printed
 typedef struct
 {
+  char *dirpath;
   FileDetails **files;  // array of FileDetails
   size_t file_count;    // number of struct dirent  in files
   size_t file_capacity; // amount of struct dirent  allocated
   size_t blocksize_sum;
+  bool direcory_listing; // is the FileList from a directory(1) or single files(0)
 } FileList;
 
 #define FLAG_HELP (1u << 0)
