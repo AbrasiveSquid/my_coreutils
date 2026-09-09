@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "my_ls_printer.h"
+#include "my_ls_helper.h"
 
 int print_items(char **arr, size_t size, unsigned int options, bool dir_file, bool files_printed,
                 const FileList *width_source)
@@ -11,7 +12,7 @@ int print_items(char **arr, size_t size, unsigned int options, bool dir_file, bo
   for (size_t i = 0; i < size; i++)
   {
     // if multiple directories, prints directory above filelist or files were printed
-    if (dir_file && size > 1 || files_printed)
+    if ((dir_file && size > 1) || files_printed)
     {
       if (i > 0)
       {
@@ -305,8 +306,6 @@ int print_path(FileList *file_list, unsigned int options)
 
 int print_long_listing(FileList *file_list, unsigned int options, const FileList *width_source)
 {
-  // this flag will test bits that affect long listing print only
-  int basic_long_list_flag = FLAG_ALL | FLAG_LIST;
   int blocksize = get_blocksize(); // gets blocksize depending on env var
 
   if ((!width_source))
@@ -314,13 +313,9 @@ int print_long_listing(FileList *file_list, unsigned int options, const FileList
     width_source = file_list;
   }
 
-  int file_size_digits = largest_num_digits_filesize(width_source);
-  int device_size_digits = char_width_devices(width_source);
-  int link_num_digits = largest_num_digits_links(width_source);
-  int max_uname_len = find_max_uname_len(width_source);
-  int max_gname_len = find_max_gname_len(width_source);
-
-  FileDetails *curr_file = NULL;
+  // determine the widths of each column
+  LongListingWidths ll_widths;
+  calculate_long_listing_widths(&ll_widths, width_source);
 
   // print sum of blocksize
   if (file_list->direcory_listing)
@@ -328,62 +323,89 @@ int print_long_listing(FileList *file_list, unsigned int options, const FileList
     printf("total %zu\n", file_list->blocksize_sum * 512 / blocksize);
   }
 
-  char perm_str[11];
-  char time_str[13];
-  int size_str_len = MAX(file_size_digits + 1,
-                         device_size_digits); // min bytes needed for size_str for character device
-  char size_str[size_str_len];
-
-  if (!(options & basic_long_list_flag))
-  {
-    // NEED TO DO deal with options
-  }
   for (size_t i = 0; i < file_list->file_count; i++)
   {
-    curr_file = file_list->files[i];
-    printf("%s", build_file_perm_string(perm_str, 11, curr_file->file_stats));
-    printf(" %*zu", link_num_digits, curr_file->file_stats->st_nlink);
-    printf(" %-*s %-*s", max_uname_len, getpwuid(curr_file->file_stats->st_uid)->pw_name,
-           max_gname_len, getgrgid(curr_file->file_stats->st_gid)->gr_name);
+    if (print_long_listing_helper(file_list->files[i], &ll_widths, options, file_list->dirpath))
+      return 1;
+  }
 
-    printf(" %*s", file_size_digits,
-           get_size_or_dev_str(size_str, size_str_len, curr_file->file_stats, options));
+  return 0;
+}
 
-    printf(" %s", epoch_to_human_readable_localtime(curr_file->file_stats->st_mtime, time_str, 13));
+int print_long_listing_helper(const FileDetails *curr_file, const LongListingWidths *widths,
+                              unsigned int options, char *dir_path)
+{
+  // min bytes needed for size_str for character device
+  int size_str_len = MAX(widths->file_size_digits + 1, widths->device_size_digits);
+  char size_str[size_str_len];
 
-    if (S_ISLNK(curr_file->file_stats->st_mode))
+  int len_perm_str = 11;
+  char perm_str[len_perm_str];
+  printf("%s", build_file_perm_string(perm_str, len_perm_str, curr_file->file_stats));
+
+  printf(" %*zu", widths->link_num_digits, curr_file->file_stats->st_nlink);
+  printf(" %-*s %-*s", widths->max_uname_len, getpwuid(curr_file->file_stats->st_uid)->pw_name,
+         widths->max_gname_len, getgrgid(curr_file->file_stats->st_gid)->gr_name);
+
+  printf(" %*s", widths->file_size_digits,
+         get_size_or_dev_str(size_str, size_str_len, curr_file->file_stats, options));
+
+  int len_time_str = 13;
+  char time_str[len_time_str];
+  printf(" %s", epoch_to_human_readable_localtime(curr_file->file_stats->st_mtime, time_str,
+                                                  len_time_str));
+  if (print_long_listing_filename(curr_file, dir_path))
+  {
+    return 1; // means error
+  }
+
+  return 0;
+}
+
+void calculate_long_listing_widths(LongListingWidths *widths, const FileList *width_source)
+{
+  widths->file_size_digits = largest_num_digits_filesize(width_source);
+  widths->device_size_digits = char_width_devices(width_source);
+  widths->link_num_digits = largest_num_digits_links(width_source);
+  widths->max_uname_len = find_max_uname_len(width_source);
+  widths->max_gname_len = find_max_gname_len(width_source);
+}
+
+int print_long_listing_filename(const FileDetails *file, char *dir_path)
+{
+
+  if (S_ISLNK(file->file_stats->st_mode))
+  {
+    int buf_size = file->file_stats->st_size + 1; // size of bytes for symlink name
+    char buf[buf_size];
+    ssize_t link_code;
+    if (!dir_path) // empty string, means no path to append
     {
-      int buf_size = curr_file->file_stats->st_size + 1; // size of bytes for symlink name
-      char buf[buf_size];
-      ssize_t link_code;
-      if (!file_list->dirpath) // empty string, means no path to append
-      {
-        link_code = readlink(curr_file->filename, buf, buf_size);
-      }
-      else
-      {
-        int str_len = strlen(file_list->dirpath) + strlen(curr_file->filename);
-        char fullpath[str_len + 1];
-        strncpy(fullpath, file_list->dirpath, strlen(file_list->dirpath) + 1);
-        strncat(fullpath, curr_file->filename, strlen(curr_file->filename));
-        link_code = readlink(fullpath, buf, buf_size);
-      }
-
-      if (link_code < 0)
-      {
-        perror(curr_file->filename);
-        return 1;
-      }
-
-      char link_str[link_code + 1];
-      strncpy(link_str, buf, link_code);
-      link_str[link_code] = '\0';
-      printf(" %s -> %s\n", curr_file->filename, link_str);
+      link_code = readlink(file->filename, buf, buf_size);
     }
     else
     {
-      printf(" %s\n", curr_file->filename);
+      int str_len = strlen(dir_path) + strlen(file->filename);
+      char fullpath[str_len + 1];
+      strncpy(fullpath, dir_path, strlen(dir_path) + 1);
+      strncat(fullpath, file->filename, strlen(file->filename));
+      link_code = readlink(fullpath, buf, buf_size);
     }
+
+    if (link_code < 0)
+    {
+      perror(file->filename);
+      return 1;
+    }
+
+    char link_str[link_code + 1];
+    strncpy(link_str, buf, link_code);
+    link_str[link_code] = '\0';
+    printf(" %s -> %s\n", file->filename, link_str);
+  }
+  else
+  {
+    printf(" %s\n", file->filename);
   }
 
   return 0;

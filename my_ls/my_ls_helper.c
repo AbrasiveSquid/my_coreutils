@@ -770,9 +770,16 @@ char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats, unsig
   }
 
   // all other files are treated the same depending on set options
+  if (options & FLAG_HUMAN)
+  {
+    // human readable size
+  }
+  else
+  {
+    // no option set
+    num_to_str((uintmax_t)file_stats->st_size, str, n);
+  }
 
-  // no option set
-  num_to_str((uintmax_t)file_stats->st_size, str, n);
   return str;
 }
 

@@ -12,6 +12,16 @@ typedef struct
   size_t *col_widths;
 } PrintDetails;
 
+// use for holding the column widths of a long listing entry
+typedef struct
+{
+  int file_size_digits;
+  int device_size_digits;
+  int link_num_digits;
+  int max_uname_len;
+  int max_gname_len;
+} LongListingWidths;
+
 /*
   Controller function that calls other functions to print files
 
@@ -166,18 +176,64 @@ PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
 int print_long_listing(FileList *file_list, unsigned int options, const FileList *width_source);
 
 /*
-  Prints the pathname to the fp. Used when multiple paths are listed as arguments
+  Prints a single file long list row
 
   Parameters:
-    path_name: char *
+    curr_file: const FileDetails *
+      a pointer to a FileDetails that contains file name and stats
+
+    widths: const LongListingWidths *
+      a pointer to a LongListingWidths struct that has the width of each column
+
+    options: unsigned int
+      a bitmask that contains the options for formatted output
+
+    dir_path: char *
+      string of the path to the directory the file is in
 
   Returns:
-    int:
-      0 for success, 1 for error
+    int: 0 for success, 1 for error
 
   Postcondition:
-    prints path_name to the fp or stdout
+    prints out a single row to stdout that contains the long listing of a file, including the
+    permissions, user owner, group owner, file size, and file name
 */
-// int print_pathname(char *pathname); currently not using, but might refactor
+int print_long_listing_helper(const FileDetails *curr_file, const LongListingWidths *widths,
+                              unsigned int options, char *dir_path);
 
+/*
+  Calculate the widths of each column and set the appropriate entry in the struct for formatting
+  stdout output
+
+  Parameters:
+  widths: LongListingWidths *
+    pointer to a struct that has a number of int for each column
+
+  Return:
+   Nones
+
+  Postcondition:
+    each of the 5 entries in a LongListingWidths struct will be updated with the correct width
+*/
+void calculate_long_listing_widths(LongListingWidths *widths, const FileList *width_source);
+
+/*
+
+  Determines if a file is symbolic link or normal file and prints out the filename in the correct
+  format to stdout
+
+  Parameters:
+    file: const FileDetails *
+      a pointer to a FileDetails that contains file name and stats
+
+    dir_path: char *
+      string of the path to the directory the file is in
+
+  Returns:
+    int: 0 for success, or 1 for error
+
+  Postcondition:
+    prints out the file name or the link to the filename if it is a soft link to stdout
+*/
+int print_long_listing_filename(const FileDetails *file, char *dir_path);
 #endif

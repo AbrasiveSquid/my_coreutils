@@ -56,6 +56,7 @@ typedef struct
 #define FLAG_VER (1u << 1)
 #define FLAG_ALL (1u << 2)
 #define FLAG_LIST (1u << 3)
+#define FLAG_HUMAN (1u << 4)
 // functions
 
 /*
