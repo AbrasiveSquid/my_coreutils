@@ -236,4 +236,34 @@ void calculate_long_listing_widths(LongListingWidths *widths, const FileList *wi
     prints out the file name or the link to the filename if it is a soft link to stdout
 */
 int print_long_listing_filename(const FileDetails *file, char *dir_path);
+
+/*
+  Prints out the the help menu for the program
+
+  Parameters:
+    program_name: char *
+      a string that is the name of the program to include in the help menu
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+    prints out the help menu with supported commands to stdout
+*/
+int print_help(char *program_name);
+
+/*
+  Prints out the the version menu for the program
+
+  Parameters:
+    program_name: char *
+      a string that is the name of the program to include in the version print
+
+  Returns:
+    int: 0 for success, 1 for error
+
+  Postcondition:
+    prints out the version information with supported commands to stdout
+*/
+int print_version(char *program_name);
 #endif

@@ -410,3 +410,27 @@ int print_long_listing_filename(const FileDetails *file, char *dir_path)
 
   return 0;
 }
+
+int print_help(char *program_name)
+{
+  printf("Usage: %s [OPTION]... [FILE]...\n", program_name);
+  printf("List information about the FILES (the current directory by default).\n");
+  printf("Sort entries alphabetically using locale aware sorting\n\n");
+
+  printf("  -a, --all\n         do not ignore entries starting with .\n");
+  printf("  -l\n         use a long listing format\n");
+
+  printf("\nExit Status:\n 0  if OK,\n 1  for errors\n 2  for invalid path name but program will "
+         "continue\n");
+
+  return 0;
+}
+
+int print_version(char *program_name)
+{
+  printf("%s (partial clone of GNU coreutils) 9.11\n", program_name);
+  printf("There is NO WARRANTY, to the extent permitted by law\n");
+  printf("\n\nWritten by Abrasive Squid");
+
+  return 0;
+}

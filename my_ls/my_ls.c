@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
       else if (arg_code == 2)
       {
         // invalid path name, set the error return code, but program to continue
-        return_code = 1;
+        return_code = 2;
       }
       else
       {
@@ -58,6 +58,18 @@ int main(int argc, char *argv[])
         return return_code;
       }
     }
+  }
+
+  // check if help or version set as program ends immediately
+  if (options & FLAG_HELP)
+  {
+    cleanup(&path_names);
+    return print_help(argv[0]);
+  }
+  else if (options & FLAG_VER)
+  {
+    cleanup(&path_names);
+    return print_version(argv[0]);
   }
 
   // sorts all files and directories by LOCALE
