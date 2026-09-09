@@ -130,8 +130,6 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
 {
   DIR *dp;
   struct dirent *dirp;
-  FileDetails *curr_file = NULL;
-  int pathlen = 0;
 
   dp = opendir(pathname);
   if (!(dp))
@@ -163,6 +161,7 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
   strcat(file_list->dirpath, "/");
 
   // read all files in pathname and all to files array
+  FileDetails *curr_file = NULL;
   while ((dirp = readdir(dp)) != NULL)
   {
     // if hidden_files not set, skips all dotfiles
@@ -178,17 +177,7 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
     }
 
     // builds up the full path of a filename to pass to create_file_details
-    pathlen = strlen(pathname) + strlen((*dirp).d_name) + 2; // +2 for null char  and /
-    char fullpath[pathlen];
-    strncpy(fullpath, pathname, pathlen);
-    // check that pathname is not empty, and if it doesnt end with /, appends a /
-    if (strlen(pathname) > 0 && pathname[strlen(pathname) - 1] != '/')
-    {
-      strcat(fullpath, "/");
-    }
-
-    strncat(fullpath, (*dirp).d_name, strlen((*dirp).d_name));
-    curr_file = create_file_details(fullpath, (*dirp).d_name);
+    curr_file = create_file_details_for_dir_entry(pathname, dirp);
     if (!(curr_file))
     {
       perror((*dirp).d_name);
@@ -203,6 +192,30 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
   closedir(dp);
 
   return file_list;
+}
+
+FileDetails *create_file_details_for_dir_entry(char *dir_path, const struct dirent *dirp)
+{
+  FileDetails *curr_file = NULL;
+
+  // builds up the full path of a filename to pass to create_file_details
+  size_t pathlen = strlen(dir_path) + strlen((*dirp).d_name) + 2; // +2 for null char  and /
+  char fullpath[pathlen];
+  strncpy(fullpath, dir_path, pathlen);
+
+  // check that pathname is not empty, and if it doesnt end with /, appends a /
+  if (strlen(dir_path) > 0 && dir_path[strlen(dir_path) - 1] != '/')
+  {
+    strcat(fullpath, "/");
+  }
+
+  strncat(fullpath, (*dirp).d_name, strlen((*dirp).d_name));
+  curr_file = create_file_details(fullpath, (*dirp).d_name);
+  if (!(curr_file))
+  {
+    return NULL;
+  }
+  return curr_file;
 }
 
 FileList *create_file_list_files(char **filenames, size_t size, bool hidden_files)
@@ -247,7 +260,7 @@ FileList *create_file_list_files(char **filenames, size_t size, bool hidden_file
   return file_list;
 }
 
-FileDetails *create_file_details(char *pathname, char *filename)
+FileDetails *create_file_details(char *pathname, const char *filename)
 {
   // allocate memory for FileDetails and check it was allocated
   FileDetails *curr_file = malloc(sizeof(*curr_file));

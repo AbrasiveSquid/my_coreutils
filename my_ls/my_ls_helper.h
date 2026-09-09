@@ -205,6 +205,24 @@ FileList *create_file_list(char *pathname, bool hidden_files);
 FileList *create_file_list_dir(char *pathname, bool hidden_files);
 
 /*
+  Creates a single entry of a directory to file_list and returns it
+
+  Parameters:
+    dir_path: char *
+      a string that is the pathname to a directory
+
+    dirp: const struct dirent *
+      a pointer to an entry from a directory
+
+  Returns:
+    FileDetails *, a pointer to an entry in a filelist
+
+  Postcondition:
+    reads the directory entry, creates the full path, adds entry to file
+*/
+FileDetails *create_file_details_for_dir_entry(char *dir_path, const struct dirent *dirp);
+
+/*
   Creates a FileList structure for a regular file
 
   Parameters:
@@ -233,14 +251,14 @@ FileList *create_file_list_files(char **filenames, size_t size, bool hidden_file
     pathname: char *
       string that represents a pathname to a file
 
-    filename: char *
+    filename: const char *
       string that represents a filename
 
   Returns:
     FileDetails *:
       a pointer to a FileDetails structure
 */
-FileDetails *create_file_details(char *pathname, char *filename);
+FileDetails *create_file_details(char *pathname, const char *filename);
 
 /*
   Parses a string for command line arguments and sets the appropriate flags that are preceded by a
