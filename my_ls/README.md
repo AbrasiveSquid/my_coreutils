@@ -1,6 +1,6 @@
 # my_ls
 
-An in-progress implementation of GNU `ls` written from scratch in C, without looking at the GNU `ls` source code.
+An implementation of a subset of GNU `ls` written from scratch in C, without looking at the GNU `ls` source code.
 
 The project is intended to closely reproduce GNU `ls` behaviour while practicing Unix system programming, file metadata handling, terminal output, and low-level C.
 
@@ -15,6 +15,8 @@ The project is intended to closely reproduce GNU `ls` behaviour while practicing
 - `-a` / `--all`
 - `-l`
 - Combined `-la` / `-al`
+- `--help`
+- `--version`
 
 Long listings currently handle:
 
@@ -29,7 +31,19 @@ Long listings currently handle:
 
 Supported file types include regular files, directories, symbolic links, FIFOs, Unix sockets, character devices, and block devices.
 
+## Build
+
+Build `my_ls` using the included Makefile:
+`make my_ls`
+
 ## Testing
+
+To run test suite:
+`make ls_tests` 
+This does not include terminal-width tests.
+
+Run the complete test suite, including terminal-width testing with:
+`make ls_all_tests`
 
 Tests compare `my_ls` directly against GNU `ls`.
 
@@ -46,17 +60,21 @@ Coverage includes:
 
 Terminal layout is compared against GNU `ls` across terminal widths from 1 to 400 columns.
 
-The project is compiled with:
+The test build is compiled with:
 
 `-Wall -Wextra -std=c99 -fsanitize=address,undefined`
 
-## Status
+## Scope
 
-Complete:
+This project implements a subset of GNU `ls` rather than the full GNU `ls` option set. The scope includes default listings, `-a`/`--all`, `-l`, combined `-la`/`-al`, multiple operands, terminal-aware column formatting, and the file types and long-listing behaviour described above.
 
-- Default listing behaviour
-- `-a` / `--all`
-- `-l`
-- Combined `-la` / `-al`
+Additional GNU `ls` options are not in the planned scope as this was a learning tool and I have moved on to other projects.
+
+## References
+
+- W. Richard Stevens and Stephen A. Rago, `Advanced Programming in the UNIX Environment`, 3rd ed. — used as a reference for Unix/POSIX system interfaces and filesystem behaviour.
+- Linux/POSIX manual pages — used as references for system calls and library functions.
+- GNU ls — used as the behavioural reference for differential testing. The GNU ls source code was not consulted during implementation.
+
 
 
