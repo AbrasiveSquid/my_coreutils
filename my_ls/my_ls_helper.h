@@ -429,8 +429,11 @@ char *num_to_str(uintmax_t num, char *str, int size);
 
     options: unsigned int
       bit mask that has boolean options that affect formatting
+
+  Returs:
+    string of the filesize
 */
-char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats, unsigned int options);
+char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats);
 
 /*
   Determines the max number of characters for the owners in a file list for print formatting

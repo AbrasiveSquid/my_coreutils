@@ -161,9 +161,6 @@ PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
       a FileList structure that contains FileDetails of files to be printed, and the number of
       files in the array
 
-    options: int *
-      pointer to a bitmask that contains the options for formatted output
-
     width_source: const FileList *
       struct of the column widths
 
@@ -173,7 +170,7 @@ PrintDetails *calc_rows_cols(FileDetails **files, size_t file_count);
   Postcondition:
     prints the strings of filenames in file_list to stdout in the long listing format
 */
-int print_long_listing(FileList *file_list, unsigned int options, const FileList *width_source);
+int print_long_listing(FileList *file_list, const FileList *width_source);
 
 /*
   Prints a single file long list row
@@ -199,15 +196,18 @@ int print_long_listing(FileList *file_list, unsigned int options, const FileList
     permissions, user owner, group owner, file size, and file name
 */
 int print_long_listing_helper(const FileDetails *curr_file, const LongListingWidths *widths,
-                              unsigned int options, char *dir_path);
+                              char *dir_path);
 
 /*
   Calculate the widths of each column and set the appropriate entry in the struct for formatting
   stdout output
 
   Parameters:
-  widths: LongListingWidths *
-    pointer to a struct that has a number of int for each column
+    widths: LongListingWidths *
+      pointer to a struct that has a number of int for each column
+
+    width_source: const FileList *
+      struct of the column widths
 
   Return:
    Nones

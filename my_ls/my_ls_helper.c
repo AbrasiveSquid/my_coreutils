@@ -744,7 +744,7 @@ char *num_to_str(uintmax_t num, char *str, int size)
   return str;
 }
 
-char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats, unsigned int options)
+char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats)
 {
   if (S_ISCHR(file_stats->st_mode) || S_ISBLK(file_stats->st_mode))
   {
@@ -769,17 +769,7 @@ char *get_size_or_dev_str(char *str, int n, const struct stat *file_stats, unsig
     return str;
   }
 
-  // all other files are treated the same depending on set options
-  if (options & FLAG_HUMAN)
-  {
-    // human readable size
-  }
-  else
-  {
-    // no option set
-    num_to_str((uintmax_t)file_stats->st_size, str, n);
-  }
-
+  num_to_str((uintmax_t)file_stats->st_size, str, n);
   return str;
 }
 

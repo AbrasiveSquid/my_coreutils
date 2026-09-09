@@ -54,7 +54,7 @@ int print_items(char **arr, size_t size, unsigned int options, bool dir_file, bo
     }
     else if (options & FLAG_LIST)
     {
-      if (print_long_listing(file_list, options, width_source))
+      if (print_long_listing(file_list, width_source))
       {
         return_code = 1;
       }
@@ -304,7 +304,7 @@ int print_path(FileList *file_list, unsigned int options)
   return return_code;
 }
 
-int print_long_listing(FileList *file_list, unsigned int options, const FileList *width_source)
+int print_long_listing(FileList *file_list, const FileList *width_source)
 {
   int blocksize = get_blocksize(); // gets blocksize depending on env var
 
@@ -325,7 +325,7 @@ int print_long_listing(FileList *file_list, unsigned int options, const FileList
 
   for (size_t i = 0; i < file_list->file_count; i++)
   {
-    if (print_long_listing_helper(file_list->files[i], &ll_widths, options, file_list->dirpath))
+    if (print_long_listing_helper(file_list->files[i], &ll_widths, file_list->dirpath))
       return 1;
   }
 
@@ -333,7 +333,7 @@ int print_long_listing(FileList *file_list, unsigned int options, const FileList
 }
 
 int print_long_listing_helper(const FileDetails *curr_file, const LongListingWidths *widths,
-                              unsigned int options, char *dir_path)
+                              char *dir_path)
 {
   // min bytes needed for size_str for character device
   int size_str_len = MAX(widths->file_size_digits + 1, widths->device_size_digits);
@@ -348,7 +348,7 @@ int print_long_listing_helper(const FileDetails *curr_file, const LongListingWid
          widths->max_gname_len, getgrgid(curr_file->file_stats->st_gid)->gr_name);
 
   printf(" %*s", widths->file_size_digits,
-         get_size_or_dev_str(size_str, size_str_len, curr_file->file_stats, options));
+         get_size_or_dev_str(size_str, size_str_len, curr_file->file_stats));
 
   int len_time_str = 13;
   char time_str[len_time_str];
