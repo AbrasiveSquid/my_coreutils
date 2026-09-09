@@ -428,7 +428,7 @@ int print_help(char *program_name)
 
 int print_version(char *program_name)
 {
-  printf("%s (partial clone of GNU coreutils) 9.11\n", program_name);
+  printf("%s 1.0 (partial clone of GNU coreutils) 9.11\n", program_name);
   printf("There is NO WARRANTY, to the extent permitted by law\n");
   printf("\n\nWritten by Abrasive Squid");
 

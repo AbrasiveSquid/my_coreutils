@@ -7,7 +7,7 @@ DEBUG_TARGETS = my_ls_debug
 OBJECTS = my_ls.o my_ls_helper.o my_ls_printer.o
 DEBUG_OBJECTS = my_ls_debug.o my_ls_helper_debug.o
 HEADERS = my_ls_helper.h debug.h my_ls_printer.h
-COMMON_TESTS = 
+COMMON_TESTS = test_help test_version
 MAC_TESTS = ls_no_arg_mac test_no_flags_mac test_show_all_flag_mac test_multiple_paths_mac test_file_path_mac test_invalid_path_mac test_multile_path_with_incorrect_path_mac test_multiple_file_path_mac test_long_list_mac
 LINUX_TESTS = ls_no_arg_linux test_no_flags_linux test_show_all_flag_linux test_multiple_paths_linux test_file_path_linux test_invalid_path_linux test_multile_path_with_incorrect_path_linux test_multiple_file_path_linux test_long_list_linux test_hard_link_linux test_hard_link_2digits_linux test_regular_file_linux test_directory_type_linux test_symbolic_link_linux test_fifo_linux test_socket_linux test_character_device_linux test_block_device_linux test_combined_la_linux test_timestamp_cases_linux test_broken_symlink_linux test_mixed_size_device_linux test_zero_values_linux test_empty_directory_linux test_long_multiple_operands_linux
 MAC_SLOW_TESTS = test_multiple_term_widths_ls_no_flags_mac 
@@ -516,4 +516,22 @@ test_long_multiple_operands_linux: my_ls
 	@expand -t 8 /tmp/ls.out    | tr -d '\r' | sed '/^Script started/d; /^Script done/d; s/[[:space:]]*$$//' > /tmp/ls.norm
 	@diff -u /tmp/my_ls.norm /tmp/ls.norm
 	@rm -rf /tmp/my_ls_test
+	@echo "passed"
+
+test_help: my_ls
+	@printf "test_help..."
+	@./my_ls --help > /tmp/my_ls_help.out
+	@grep -Fq "Usage: ./my_ls [OPTION]... [FILE]..." /tmp/my_ls_help.out
+	@grep -Fq -- "-a, --all" /tmp/my_ls_help.out
+	@grep -Fq -- "-l" /tmp/my_ls_help.out
+	@grep -Fq "Exit Status:" /tmp/my_ls_help.out
+	@rm -f /tmp/my_ls_help.out
+	@echo "passed"
+
+test_version: my_ls
+	@printf "test_version..."
+	@./my_ls --version > /tmp/my_ls_version.out
+	@grep -Fq "partial clone of GNU coreutils" /tmp/my_ls_version.out
+	@grep -Fq "Written by Abrasive Squid" /tmp/my_ls_version.out
+	@rm -f /tmp/my_ls_version.out
 	@echo "passed"
