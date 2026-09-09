@@ -14,7 +14,7 @@ how these programs interface with the OS.
 | program | description                  | status         |   
 |---------|------------------------------|----------------|
 | [`my_cat`](my_cat) | concatenate files to stdout | **completed** | <br> 
-| [`my_ls`](my_ls) | list information about files | *in progress* |<br>
+| [`my_ls`](my_ls) | list information about files | *completed* |<br>
 
 
 ## Highlights
@@ -27,7 +27,7 @@ how these programs interface with the OS.
 
 [`my_cat`](my_cat) implements the GNU `cat` options (flags), including stdin handling, multiple files, how options interact with each other, and non-printing characters.
 
-[`my_ls`](my_ls) currently reproduces the default no-option behaviour as well as `-a` and `-l` including TTY detection, redirected
+[`my_ls`](my_ls) reproduces the default no-option behaviour as well as `-a` and `-l` including TTY detection, redirected
 output, dynamic column layout, and testing across various terminal widths against GNU `ls` behaviour.
 
 Each utility's subdirectory for implementation details, build instructions, and tests.
