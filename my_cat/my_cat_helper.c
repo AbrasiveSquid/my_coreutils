@@ -270,8 +270,7 @@ void parse_files(char *file_name, File_List *file_list)
   else if (file_list->capacity <= file_list->file_count)
   {
     char **file_list_temp =
-        realloc(file_list->files,
-                (file_list->capacity * 2) * sizeof(*file_list->files));
+        realloc(file_list->files, (file_list->capacity * 2) * sizeof(*file_list->files));
     if (!file_list_temp)
     {
       perror(file_name);
@@ -285,8 +284,7 @@ void parse_files(char *file_name, File_List *file_list)
   file_list->files[(file_list->file_count)++] = file_name;
 }
 
-void parse_arguments(int size, char **argv, File_List *file_list,
-                     Options *flags)
+void parse_arguments(int size, char **argv, File_List *file_list, Options *flags)
 {
   for (int i = 0; i < size; i++)
   {
@@ -310,9 +308,8 @@ void parse_arguments(int size, char **argv, File_List *file_list,
 
 void set_active_flags(Options *flags)
 {
-  flags->active_flags = flags->number_lines || flags->number_nonblank_lines ||
-                        flags->show_ends || flags->squeeze_blank ||
-                        flags->show_tabs || flags->show_nonprinting;
+  flags->active_flags = flags->number_lines || flags->number_nonblank_lines || flags->show_ends ||
+                        flags->squeeze_blank || flags->show_tabs || flags->show_nonprinting;
 }
 
 void print_help(char *program_name)
@@ -321,18 +318,15 @@ void print_help(char *program_name)
   printf("Concatenate File(s) to standard output.\n");
   printf("\nWith no FILE, or when FILE is -, read standard input.\n");
   printf("\n   %-25sequivalent to -vET\n", "-A, --show-all");
-  printf("   %-25snumber nonempty output lines, overrides -n\n",
-         "-b, --number-nonblank");
+  printf("   %-25snumber nonempty output lines, overrides -n\n", "-b, --number-nonblank");
   printf("   %-25sequivalent to -vE\n", "-e");
   printf("   %-25sdisplay $ at end of each line\n", "-E, --show-ends");
   printf("   %-25snumber all output lines\n", "-n, --number");
-  printf("   %-25ssuppress repeated empty output lines\n",
-         "-s, --squeeze-blank");
+  printf("   %-25ssuppress repeated empty output lines\n", "-s, --squeeze-blank");
   printf("   %-25sequivalent to -vT\n", "-t");
   printf("   %-25sdisplay TAB characters as ^I\n", "-T, --show-tabs");
   printf("   %-25s(ignored)\n", "-u");
-  printf("   %-25suse ^ and M- notation, except for LFD and TAB\n",
-         "-v, --show-nonprinting");
+  printf("   %-25suse ^ and M- notation, except for LFD and TAB\n", "-v, --show-nonprinting");
   printf("\t    %-14sdisplay this help and exit\n", "--help");
   printf("\t    %-14soutput version information and exit\n", "--version");
 
@@ -349,7 +343,6 @@ void print_help(char *program_name)
 void print_version(char *program_name)
 {
   printf("%s (clone of GNU coreutils) 9.4", program_name);
-  printf("\nNo claim of any copyright or license\n");
   printf("There is NO WARRANTY, to the extent permitted by law.\n");
   printf("\nWritten by Abrasive Squid\n");
 }
