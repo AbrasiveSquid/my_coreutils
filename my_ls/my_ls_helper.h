@@ -152,6 +152,21 @@ void free_file_list(FileList *file_list);
 void *alloc_array(void *arr, size_t size, size_t elem_size);
 
 /*
+  Initialize and allocate memory for a FileList struct and return a pointer to it
+
+  Parameters:
+    dir: bool
+      true if the FileList is for a directory, otherwise false
+
+    file_cap: size_t
+      the amount of file capacity to initalize
+
+  Returns:
+    FileList * that is initalize and memory allocatd
+*/
+FileList *init_file_list(bool dir, size_t file_cap);
+
+/*
   Reads a diretory pathname and creates a structure FileList pointer that
   contains details of those that directory, including file details and number of
   files

@@ -96,6 +96,36 @@ void *alloc_array(void *arr, size_t size, size_t elem_size)
   return temp_arr;
 }
 
+FileList *init_file_list(bool dir, size_t file_cap)
+{
+
+  FileList *file_list = malloc(sizeof(*file_list));
+  if (!(file_list))
+  {
+    fprintf(stderr, "Error allocating memory in init_file_list, exiting.\n");
+    free_file_list(file_list);
+    return NULL;
+  }
+
+  // initialize file_list then allocate memory for files
+  file_list->files = NULL;
+  if (dir)
+  {
+    file_list->direcory_listing = true;
+  }
+  else
+  {
+    file_list->direcory_listing = false;
+  }
+  file_list->file_capacity = file_cap; // set inital capacity for 4
+  file_list->file_count = 0;
+  file_list->files =
+      alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
+  file_list->blocksize_sum = 0;
+
+  return file_list;
+}
+
 FileList *create_file_list_dir(char *pathname, bool hidden_files)
 {
   DIR *dp;
@@ -111,22 +141,14 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
   }
 
   // initialize FileList struct that holds details of directories files
-  FileList *file_list = malloc(sizeof(*file_list));
+  size_t inital_file_cap = 4;
+  FileList *file_list = init_file_list(true, inital_file_cap);
   if (!(file_list))
   {
-    fprintf(stderr, "Error allocating memory in create_file_list, exiting.\n");
     free_file_list(file_list);
+    closedir(dp);
     return NULL;
   }
-
-  // initialize file_list then allocate memory for files
-  file_list->files = NULL;
-  file_list->direcory_listing = true;
-  file_list->file_capacity = 4; // set inital capacity for 4
-  file_list->file_count = 0;
-  file_list->files =
-      alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
-  file_list->blocksize_sum = 0;
 
   // save full path to directory that contains these files
   file_list->dirpath = malloc(sizeof(char) * (strlen(pathname)) + 2); // for null and '/'
@@ -185,21 +207,13 @@ FileList *create_file_list_dir(char *pathname, bool hidden_files)
 
 FileList *create_file_list_files(char **filenames, size_t size, bool hidden_files)
 {
-  FileList *file_list = malloc(sizeof(*file_list));
+  // initialize FileList struct that holds details of directories files
+  FileList *file_list = init_file_list(false, size);
   if (!(file_list))
   {
-    fprintf(stderr, "Error allocating memory in create_file_list, exiting.\n");
+    free_file_list(file_list);
     return NULL;
   }
-
-  // initialize file_list then allocate memory for files
-  file_list->files = NULL;
-  file_list->direcory_listing = false;
-  file_list->file_capacity = size; // capacity to size
-  file_list->file_count = 0;
-  file_list->blocksize_sum = 0; // init value but not used for files by themselves
-  file_list->files =
-      alloc_array(file_list->files, file_list->file_capacity, sizeof(*(file_list->files)));
 
   // since these files have full paths, have empty try
   file_list->dirpath = malloc(sizeof(char) * 1);
