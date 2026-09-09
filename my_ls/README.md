@@ -59,12 +59,4 @@ Complete:
 - `-l`
 - Combined `-la` / `-al`
 
-### Planned
-- `--help`
-- `--version`
-- `-h`
-- `-r`
-- `-t`
-- `-S`
-- `-1`
 
