@@ -342,7 +342,7 @@ void print_help(char *program_name)
 
 void print_version(char *program_name)
 {
-  printf("%s (clone of GNU coreutils) 9.4", program_name);
+  printf("%s 1.0 (clone of GNU coreutils) 9.4\n", program_name);
   printf("There is NO WARRANTY, to the extent permitted by law.\n");
   printf("\nWritten by Abrasive Squid\n");
 }
