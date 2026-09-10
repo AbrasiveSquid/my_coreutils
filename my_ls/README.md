@@ -36,6 +36,14 @@ Supported file types include regular files, directories, symbolic links, FIFOs, 
 Build `my_ls` using the included Makefile:
 `make my_ls`
 
+## What I learned
+
+**Terminal layout**: GNU `ls` fills entries down columns and sizes each column based on its longest filename. I had to try different row counts, calculate column widths, and pick the densest layout that fit the terminal (using ioctl and isatty()). I also had to handle narrow viewports, TTY vs redirected output, and test widths from 1–400 columns against real ls. A number of challenges arose in calculating the width of the column to match GNU `ls`.
+
+**Filesystem metadata**: Implementing `-l` required working directly with `stat()`/`lstat()`, `mode_t` permission bits, link counts, UID/GID lookups, timestamps, symlinks, and Unix file types. Character and block devices also meant displaying major/minor numbers instead of normal file sizes.
+
+Matching GNU behavior: Cloning `ls` behaviour exposed edge cases I wouldn't have considered otherwise: file vs directory operands, invalid paths, hidden files, locale sorting with `strcoll()`, and flag combinations. Diff testing against `ls` was how I determined if my clone matched `ls` behaviour.
+
 ## Testing
 
 To run test suite:
